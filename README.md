@@ -137,9 +137,25 @@ We note that these coefficients do not depend on $x$ in any way, so they can be 
 
 ### Batched Linear Operations
 
-With all the coefficients ready, $x$ and the shortened $x$ will be copied into the read-only device constant memory.
+![GPU_1](https://github.com/yhz0/twosd-cpp/assets/35647076/48979b64-866e-4f77-b909-327344dc46e8)
+
+
+With all the coefficients ready, $x$ and the shortened $x$ will be copied into the read-only device constant memory. The device will do the following:
+
+1. For the fixed part, an SGEMV matrix-vector multiplication to compute $\bar \alpha_i + \bar \beta_i x$.
+2. For the random part, a batched SGEMV matrix-vector multiplication to compute $\alpha_{ij} + \beta_{ij} x$.
+3. Add the fixed part result to the random part result to recover $\pi_i(r(\omega_j) - T(\omega_j)x)$.
 
 ### Parallel Reduction
 
+We may allocate shared memory to store the result of the previous calculation, since they are now all scalars. The argmax operation will be done in this array on shared memory in two passes.
+![GPU_2](https://github.com/yhz0/twosd-cpp/assets/35647076/35551894-5265-4304-9030-e9e3b2b517b2)
+
+
+1. The first pass will use a parallel reduction scheme to find the max value of the array across the $\pi$ axis. If more than one block is used in the $\pi$ axis, another round of reduction is needed.
+2. After the first pass completes, the second pass will conditionally copy the $\bar \alpha_i + \alpha_{ij}$ and $ \bar \beta_i+\beta_{ij}$ to another array.
+3. Optionally, these values will be averaged, and the resulting coefficients copied to the host.
+
 ## Design Three: validate the solutions online.
 
+One shortcoming in the original stochastic decomposition algorithm is that it is difficult to get a stopping criteria, since we have to rely on statistical estimations. It is desirable that we have a way to monitor the progress the algorithm is making, by calculating an upper bound of the true objective. We can create another rank called Validator, that fetches the incumbent solution $x$ from the master. It will attempt to evaluate the true $Q(x)$ at that point, by external sampling and solving second stage scenario LPs. Once the pessimistic gap is small enough, we can declare the problem is solved to near-optimality.
