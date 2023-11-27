@@ -51,7 +51,7 @@ If the random element $\omega$ has finite support i.e. there are only a finite n
 
 If $T(\omega), r(\omega)$ takes value $T_i, r_i$ with probability $p_i$, $i = 1 \dots N$.
 
-$\min_{x, y_i} c^\top x + \sum_{i=1}^N p_i d^\top y_i$
+$\min_{x, y_i} c^\top x + \sum_i p_i d^\top y_i$
 
 subject to $Ax = b, x \geq 0$
 
@@ -153,7 +153,7 @@ We may allocate shared memory to store the result of the previous calculation, s
 
 
 1. The first pass will use a parallel reduction scheme to find the max value of the array across the $\pi$ axis. If more than one block is used in the $\pi$ axis, another round of reduction is needed.
-2. After the first pass completes, the second pass will conditionally copy the $\bar \alpha_i + \alpha_{ij}$ and $ \bar \beta_i+\beta_{ij}$ to another array.
+2. After the first pass completes, the second pass will conditionally copy the $\bar \alpha_i + \alpha_{ij}$ and $\bar \beta_i+\beta_{ij}$ to another array.
 3. Optionally, these values will be averaged, and the resulting coefficients copied to the host.
 
 ## Design Three: validate the solutions online.
