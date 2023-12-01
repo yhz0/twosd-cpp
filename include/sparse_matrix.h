@@ -10,10 +10,31 @@
 template<typename T>
 class SparseMatrix {
 public:
+    // Iterator methods.
+    using Element = std::tuple<int, int, T>;
+    using Iterator = typename std::vector<Element>::iterator;
+    using ConstIterator = typename std::vector<Element>::const_iterator;
+
+    // Methods to provide iterators for the non-zero elements
+    Iterator begin();
+    ConstIterator begin() const;
+    Iterator end();
+    ConstIterator end() const;
+
+    // Default constructor creates a matrix of size 0x0.
+    SparseMatrix();
+
     // Constructor to create a sparse matrix of given dimensions.
     // rows: Number of rows in the matrix.
     // cols: Number of columns in the matrix.
     SparseMatrix(int rows, int cols);
+
+    // Resizes the matrix to new dimensions.
+    // Any existing data in the matrix is retained, but may become inaccessible
+    // if the new size is smaller than the original size.
+    // rows: New number of rows in the matrix.
+    // cols: New number of columns in the matrix.
+    void resize(int rows, int cols);
 
     // Adds a non-zero element to the sparse matrix at the specified position.
     // This function should not be called more than once for the same position,
@@ -37,8 +58,8 @@ public:
     std::vector<T> multiply_with_vector(const std::vector<T>& vec) const;
 
 private:
-    int numRows; // Number of rows in the matrix.
-    int numCols; // Number of columns in the matrix.
+    int num_rows; // Number of rows in the matrix.
+    int num_cols; // Number of columns in the matrix.
     std::vector<std::tuple<int, int, T>> elements; // Vector to store non-zero elements as tuples (row, col, value).
 };
 
