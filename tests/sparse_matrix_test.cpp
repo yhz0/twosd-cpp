@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_MAIN  // This tells Catch to provide a main() function
 #include "../external/catch_amalgamated.hpp"
-#include "../include/sparse_matrix.h"
+#include "sparse_matrix.h"
 
 using Catch::Approx;
 
