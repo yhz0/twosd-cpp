@@ -1,12 +1,13 @@
 CXX = g++  # or clang++
-CXXFLAGS = -std=c++14 -Wall -Iinclude
+CXXFLAGS = -std=c++17 -Wall -g -Iinclude
 
 # Source files
-SRCS = src/sparse_matrix.cpp src/utils.cpp src/main.cpp
-OBJS = $(SRCS:.cpp=.o)
+MAIN_SRCS = $(wildcard src/*.cpp)
+MAIN_OBJS = $(MAIN_SRCS:.cpp=.o)
+MAIN_EXEC = main
 
 # Test files
-TEST_SRCS = tests/sparse_matrix_test.cpp tests/utils_test.cpp src/sparse_matrix.cpp src/utils.cpp external/catch_amalgamated.cpp
+TEST_SRCS = $(filter-out src/main.cpp, $(wildcard src/*.cpp)) $(wildcard tests/*.cpp) external/catch_amalgamated.cpp
 TEST_OBJS = $(TEST_SRCS:.cpp=.o)
 TEST_EXEC = run_tests
 
@@ -22,7 +23,7 @@ test: $(TEST_OBJS)
 	./$(TEST_EXEC)
 
 clean:
-	rm -f src/*.o tests/*.o main $(TEST_EXEC)
+	rm -f src/*.o tests/*.o $(MAIN_EXEC) $(TEST_EXEC)
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
