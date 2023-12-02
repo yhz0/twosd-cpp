@@ -15,7 +15,7 @@ void BijectiveMap::add(const std::string &name, int index)
     name_to_index_map[name] = index;
 }
 
-int BijectiveMap::get_index(const std::string &name) const
+std::optional<int> BijectiveMap::get_index(const std::string &name) const
 {
     auto it = name_to_index_map.find(name);
     if (it != name_to_index_map.end())
@@ -24,11 +24,11 @@ int BijectiveMap::get_index(const std::string &name) const
     }
     else
     {
-        throw std::runtime_error("Name not found in bijection map");
+        return std::nullopt;
     }
 }
 
-std::string BijectiveMap::get_name(int index) const
+std::optional<std::string> BijectiveMap::get_name(int index) const
 {
     if (index >= 0 && index < static_cast<int>(index_to_name_vector.size()))
     {
@@ -36,6 +36,6 @@ std::string BijectiveMap::get_name(int index) const
     }
     else
     {
-        throw std::runtime_error("Index not found in bijection map");
+        return std::nullopt;
     }
 }
