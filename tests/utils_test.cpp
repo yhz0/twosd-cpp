@@ -17,6 +17,8 @@ TEST_CASE("BijectiveMap operations", "[BijectiveMap]") {
         REQUIRE(map.get_index("Alice").value() == 0);
         REQUIRE(map.get_index("Bob").value() == 1);
         REQUIRE(map.get_index("Charlie").value() == 2);
+
+        REQUIRE(map.size() == 3);
     }
 
     SECTION("Handling non-existent names and indices") {

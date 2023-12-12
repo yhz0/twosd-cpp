@@ -1,5 +1,5 @@
 #define CATCH_CONFIG_MAIN
-#include "catch_amalgamated.hpp"
+#include "../external/catch_amalgamated.hpp"
 #include "smps.h"
 #include <limits>
 
@@ -44,4 +44,29 @@ TEST_CASE("SMPSCore COR File Parsing", "[SMPSCore]") {
         REQUIRE(core.lp_coefficients.get_element(0, 0) == Approx(10.0));
         
     }
+}
+
+TEST_CASE("SMPSCore Implicit TIME File Parsing", "[SMPSImplicitTime]") {
+    smps::SMPSCore cor("tests/lands/lands.cor");
+    smps::SMPSImplicitTime tim("tests/lands/lands.tim");
+
+    SECTION("Row tests") {
+        REQUIRE(tim.get_row_stage("OBJ", cor.row_name_map) == -1);
+        REQUIRE(tim.get_row_stage("S1C1", cor.row_name_map) == 0);
+        REQUIRE(tim.get_row_stage("S1C2", cor.row_name_map) == 0);
+
+        REQUIRE(tim.get_row_stage("S2C1", cor.row_name_map) == 1);
+        REQUIRE(tim.get_row_stage("S2C7", cor.row_name_map) == 1);
+
+    }
+
+    SECTION("Column tests") {
+        REQUIRE(tim.get_col_stage("RHS", cor.col_name_map) == -1);
+        REQUIRE(tim.get_col_stage("X1", cor.col_name_map) == 0);
+        REQUIRE(tim.get_col_stage("X4", cor.col_name_map) == 0);
+        REQUIRE(tim.get_col_stage("Y11", cor.col_name_map) == 1);
+        REQUIRE(tim.get_col_stage("Y21", cor.col_name_map) == 1);
+        REQUIRE(tim.get_col_stage("Y42", cor.col_name_map) == 1);
+    }
+
 }

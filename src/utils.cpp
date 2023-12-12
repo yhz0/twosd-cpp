@@ -39,3 +39,7 @@ std::optional<std::string> BijectiveMap::get_name(int index) const
         return std::nullopt;
     }
 }
+
+int BijectiveMap::size() const {
+    return index_to_name_vector.size();
+}

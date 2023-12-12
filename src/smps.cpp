@@ -7,7 +7,7 @@ namespace smps
 
     SMPSCore::SMPSCore() : num_rows(0), num_cols(0) {}
 
-    void SMPSCore::read_cor_file(const std::string &filename)
+    SMPSCore::SMPSCore(const std::string &filename) : num_rows(0), num_cols(0)
     {
         std::ifstream file(filename);
         if (!file.is_open())
@@ -182,10 +182,103 @@ namespace smps
                 } else {
                     throw std::runtime_error("Unsupported section name '" + section + "' found at line " + std::to_string(line_number));
                 }
-                
             }
         }
         file.close();
     }
 
+    SMPSImplicitTime::SMPSImplicitTime(const std::string &filename)
+    {
+        std::ifstream file(filename);
+        std::string line;
+        bool inPeriodsSection = false;
+
+        if (!file.is_open())
+        {
+            throw std::runtime_error("Cannot open file: " + filename);
+        }
+
+        while (std::getline(file, line))
+        {
+            if (line.empty() || line[0] == '*')
+                continue; // Skip empty lines and comments
+
+            std::istringstream iss(line);
+            std::vector<std::string> tokens{std::istream_iterator<std::string>{iss}, std::istream_iterator<std::string>{}};
+
+            if (tokens.empty())
+                continue;
+
+            if (tokens[0] == "TIME")
+            {
+                if (tokens.size() != 2)
+                    throw std::runtime_error("Invalid TIME format in file");
+                problem_name = tokens[1];
+            }
+            else if (tokens[0] == "PERIODS")
+            {
+                inPeriodsSection = true;
+            }
+            else if (tokens[0] == "ENDATA")
+            {
+                break;
+            }
+            else if (inPeriodsSection && tokens.size() == 3)
+            {
+                column_names.push_back(tokens[0]);
+                row_names.push_back(tokens[1]);
+                period_names.push_back(tokens[2]);
+            }
+            else
+            {
+                throw std::runtime_error("Invalid implicit time file format");
+            }
+        }
+
+        file.close();
+    }
+
+    int SMPSImplicitTime::get_row_stage(std::string row_name, const BijectiveMap &row_name_map)
+    {
+        if (row_name == "OBJ" || row_name == "obj")
+        {
+            return -1;
+        }
+
+        int stage = 0;
+        for (int i = 0; i < row_name_map.size(); i++) {
+            std::string current_name = row_name_map.get_name(i).value();
+
+            if (stage < row_names.size() && row_names[stage] == current_name) {
+                stage ++;
+            }
+            if (current_name == row_name) {
+                return stage - 1;
+            }
+        }
+
+        throw std::runtime_error("Invalid row_name in get_row_stage!");
+    }
+
+    int SMPSImplicitTime::get_col_stage(std::string col_name, const BijectiveMap &col_name_map)
+    {
+        if (col_name == "RHS" || col_name == "rhs")
+        {
+            return -1;
+        }
+
+        int stage = 0;
+        for (int i = 0; i < col_name_map.size(); i++) {
+            std::string current_name = col_name_map.get_name(i).value();
+
+            if (stage < column_names.size() && column_names[stage] == current_name) {
+                stage ++;
+            }
+            if (current_name == col_name) {
+                return stage - 1;
+            }
+        }
+
+        throw std::runtime_error("Invalid col in get_col_stage!");
+    }
 } // namespace smps
