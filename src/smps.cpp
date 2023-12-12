@@ -238,7 +238,7 @@ namespace smps
         file.close();
     }
 
-    int SMPSImplicitTime::get_row_stage(std::string row_name, const BijectiveMap &row_name_map)
+    int SMPSImplicitTime::get_row_stage(std::string row_name, const BijectiveMap &row_name_map) const
     {
         if (row_name == "OBJ" || row_name == "obj")
         {
@@ -260,7 +260,7 @@ namespace smps
         throw std::runtime_error("Invalid row_name in get_row_stage!");
     }
 
-    int SMPSImplicitTime::get_col_stage(std::string col_name, const BijectiveMap &col_name_map)
+    int SMPSImplicitTime::get_col_stage(std::string col_name, const BijectiveMap &col_name_map) const
     {
         if (col_name == "RHS" || col_name == "rhs")
         {

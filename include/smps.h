@@ -49,10 +49,10 @@ class SMPSTime
     public:
         // Returns the stage number of a row given its name and a bijective mapping of row names.
         // The root stage is counted as stage 0.
-        virtual int get_row_stage(std::string row_name, const BijectiveMap &row_name_map) = 0;
+        virtual int get_row_stage(std::string row_name, const BijectiveMap &row_name_map) const = 0;
 
         // Returns the stage number of a column given its name and a bijective mapping of column names.
-        virtual int get_col_stage(std::string col_name, const BijectiveMap &col_name_map) = 0;
+        virtual int get_col_stage(std::string col_name, const BijectiveMap &col_name_map) const = 0;
     };
 
     class SMPSImplicitTime : public SMPSTime
@@ -62,8 +62,8 @@ class SMPSTime
         // filename: Path to the implicit SMPS time file.
         SMPSImplicitTime(const std::string &filename);
 
-        int get_row_stage(std::string row_name, const BijectiveMap &row_name_map) override;
-        int get_col_stage(std::string col_name, const BijectiveMap &col_name_map) override;
+        int get_row_stage(std::string row_name, const BijectiveMap &row_name_map) const override;
+        int get_col_stage(std::string col_name, const BijectiveMap &col_name_map) const override;
 
     private:
         std::string problem_name;             // Name of the problem.
