@@ -1,16 +1,14 @@
 #define CATCH_CONFIG_MAIN
-#include "../external/catch_amalgamated.hpp"
+#include "catch_amalgamated.hpp"
 #include "smps.h"
 #include <limits>
 
 using Catch::Approx;
 
 TEST_CASE("SMPSCore COR File Parsing", "[SMPSCore]") {
-    smps::SMPSCore core;
+    smps::SMPSCore core("tests/lands/lands.cor");
 
     SECTION("Read COR file and verify contents") {
-        core.read_cor_file("tests/lands/lands.cor");
-
         // Test problem name
         REQUIRE(core.problem_name == "LandS");
 

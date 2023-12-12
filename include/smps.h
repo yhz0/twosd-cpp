@@ -21,7 +21,7 @@ namespace smps
         SMPSCore();
 
         // Read the COR file and store the data in the object
-        void read_cor_file(const std::string& filename);
+        SMPSCore(const std::string& filename);
 
         // the name of the problem
         std::string problem_name;
@@ -43,21 +43,24 @@ namespace smps
 
     };
 
-    // class SMPSTime
-    // {
-    // public:
-    //     virtual int get_stage(int index, const std::string &name_mapping) = 0;
-    // };
+    class SMPSTime
+    {
+    public:
+        virtual int get_row_stage(int row_index, const BijectiveMap &row_name_map) = 0;
+        virtual int get_col_stage(int col_index, const BijectiveMap &col_name_map) = 0;
+    };
 
-    // class SMPSImplicitTime : public SMPSTime
-    // {
-    // public:
-    //     int get_stage(int index, const std::string &name_mapping) override;
-
-    // private:
-    //     std::vector<std::string> column_names;
-    //     std::vector<std::string> row_names;
-    // };
+    class SMPSImplicitTime : public SMPSTime
+    {
+    public:
+        // read smps time file from file
+        SMPSImplicitTime(const std::string &filename);
+    private:
+        // the name of the problem
+        std::string problem_name;
+        std::vector<std::string> column_names;
+        std::vector<std::string> row_names;
+    };
 
     // class SMPSExplicitTime : public SMPSTime
     // {
@@ -67,6 +70,13 @@ namespace smps
     // private:
     //     std::map<std::string, int> name_to_stage_map;
     // };
+
+    class SMPSStoch
+    {
+        public:
+            // read smps stoch file from file.
+            SMPSStoch();
+    };
 
 }
 
