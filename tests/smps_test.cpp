@@ -49,7 +49,7 @@ TEST_CASE("SMPSCore COR File Parsing", "[SMPSCore]") {
     }
 }
 
-TEST_CASE("SMPSCore Implicit TIME File Parsing", "[SMPSImplicitTime]") {
+TEST_CASE("SMPS Implicit TIME File Parsing", "[SMPSImplicitTime]") {
     smps::SMPSCore cor("tests/lands/lands.cor");
     smps::SMPSImplicitTime tim("tests/lands/lands.tim");
 
@@ -78,5 +78,22 @@ TEST_CASE("SMPSCore Implicit TIME File Parsing", "[SMPSImplicitTime]") {
         REQUIRE(tim.ncols(0, cor.col_name_map) == 4);
         REQUIRE(tim.ncols(1, cor.col_name_map) == 12);
     }
+
+}
+
+TEST_CASE("SMPS STO file parsing", "[SMPSStoch]") {
+    smps::SMPSStoch sto("tests/lands/lands.sto");
+
+    // display summary
+    // std::cout << sto.summary() << std::endl;
+
+    // smps::SMPSStoch sto_20("tests/sto_tests/20.sto");
+    // std::cout << sto_20.summary() << std::endl;
+
+    // smps::SMPSStoch sto_sgsc("tests/sto_tests/sgsc.sto");
+    // std::cout << sto_sgsc.summary() << std::endl;
+
+    // smps::SMPSStoch sto_transship("tests/sto_tests/transship.sto");
+    // std::cout << sto_transship.summary() << std::endl;
 
 }

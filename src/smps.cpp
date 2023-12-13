@@ -325,8 +325,8 @@ namespace smps
     int SMPSTime::nrows(int stage, const BijectiveMap &row_name_map)
     {
         int cnt = 0;
-        for(int i = 0; i < row_name_map.size(); i++)
-            if(std::get<0>(get_row_stage(row_name_map.get_name(i).value(), row_name_map)) == stage)
+        for (int i = 0; i < row_name_map.size(); i++)
+            if (std::get<0>(get_row_stage(row_name_map.get_name(i).value(), row_name_map)) == stage)
                 cnt++;
         return cnt;
     }
@@ -334,10 +334,210 @@ namespace smps
     int SMPSTime::ncols(int stage, const BijectiveMap &col_name_map)
     {
         int cnt = 0;
-        for(int i = 0; i < col_name_map.size(); i++)
-            if(std::get<0>(get_col_stage(col_name_map.get_name(i).value(), col_name_map)) == stage)
+        for (int i = 0; i < col_name_map.size(); i++)
+            if (std::get<0>(get_col_stage(col_name_map.get_name(i).value(), col_name_map)) == stage)
                 cnt++;
         return cnt;
-
     }
+
+    double SMPSStoch::SMPSIndepDiscrete::generate(std::mt19937 &rng)
+    {
+        return values[dist(rng)];
+    }
+
+    std::string SMPSStoch::SMPSIndepDiscrete::element_summary() const
+    {
+        // enumerate all the values
+        std::string s = "INDEP DISCRETE Values: ";
+        for (auto v: values) {
+            s += std::to_string(v) + " ";
+        }
+        s += " ";
+        // enumerate all the probs
+        s += "Probs: ";
+        for (auto p: dist.probabilities()) {
+            s += std::to_string(p) + " ";
+        }
+
+        return s;
+    }
+
+    double SMPSStoch::SMPSIndepNormal::generate(std::mt19937 &rng)
+    {
+        return dist(rng);
+    }
+
+    std::string SMPSStoch::SMPSIndepNormal::element_summary() const
+    {
+        //print mean and stddev
+        return "INDEP NORMAL Mean: " + std::to_string(dist.mean()) + " Stddev: " + std::to_string(dist.stddev());
+    }
+
+    double SMPSStoch::SMPSIndepUniform::generate(std::mt19937 &rng)
+    {
+        return dist(rng);
+    }
+
+    std::string SMPSStoch::SMPSIndepUniform::element_summary() const
+    {
+        // print lower and upper
+        return "INDEP UNIFORM Lower: " + std::to_string(dist.a()) + " Upper: " + std::to_string(dist.b());
+    }
+
+    SMPSStoch::SMPSStoch(const std::string &filename)
+    {
+        std::ifstream file(filename);
+        std::string line;
+
+        if (!file.is_open())
+        {
+            throw std::runtime_error("Unable to open file: " + filename);
+        }
+
+        int line_number = 0;
+
+        // current section headers
+        std::string section_name, subsection_name;
+
+        // need special treatment for INDEP DISCRETE
+        // this will be remembered and processed in the end
+        // maps from (col, row) -> vector of (value, prob)
+        std::map< std::tuple<std::string, std::string>,
+            std::vector<std::tuple<double, double> > > indep_discrete_mapping;
+        
+        // the indices in indep_elem that correspond to the positions in indep_pos
+        // we should process them in the end
+        std::vector<int> indep_discrete_mapping_index;
+
+        while (getline(file, line))
+        {
+            line_number++;
+            std::istringstream iss(line);
+
+            // Ignore empty lines and comments
+            if (line.empty() || line[0] == '*')
+            {
+                continue;
+            }
+
+            if (line[0] == ' ')
+            {
+                // data lines.
+                if (section_name == "INDEP" && subsection_name == "DISCRETE") {
+                    // INDEP DISCRETE
+                    // remember it just now and process at the end
+                    std::string col_name, row_name;
+                    double value, prob;
+                    iss >> col_name >> row_name >> value >> prob;
+                    
+                    auto pos = std::make_tuple(col_name, row_name);
+                    auto entry = std::make_tuple(value, prob);
+
+                    // if indep_pos does not contain pos, then append it
+                    if (std::find(indep_pos.begin(), indep_pos.end(), pos) == indep_pos.end()) {
+                        indep_discrete_mapping_index.push_back(indep_pos.size());
+
+                        indep_pos.push_back(pos);
+                        // create a placeholder in indep_elem
+                        indep_elem.push_back(nullptr);
+                    }
+
+                    // create empty vector for indep_discrete_mapping[pos] if not exists
+                    // then append the current entry to it
+                    if (indep_discrete_mapping.find(pos) == indep_discrete_mapping.end()) {
+                        indep_discrete_mapping[pos] = std::vector<std::tuple<double, double> >();
+                    }
+                    indep_discrete_mapping[pos].push_back(entry);
+                }
+                else if (section_name == "INDEP" && subsection_name == "NORMAL") {
+                    // INDEP NORMAL
+                    std::string col_name, row_name;
+                    double mean, stddev;
+                    iss >> col_name >> row_name >> mean >> stddev;
+                    
+                    auto pos = std::make_tuple(col_name, row_name);
+                    indep_pos.push_back(pos);
+                    auto ptr = std::make_unique<SMPSIndepNormal>(mean, stddev);
+                    indep_elem.push_back(std::move(ptr));
+                }
+                else if (section_name == "INDEP" && subsection_name == "UNIFORM") {
+                    // INDEP UNIFORM
+                    std::string col_name, row_name;
+                    double lower, upper;
+                    iss >> col_name >> row_name >> lower >> upper;
+                    
+                    auto pos = std::make_tuple(col_name, row_name);
+                    indep_pos.push_back(pos);
+                    auto ptr = std::make_unique<SMPSIndepUniform>(lower, upper);
+                    indep_elem.push_back(std::move(ptr));
+                }
+                else {
+                    // unsupported subsection
+                    throw std::runtime_error("Unsupported subsection type '" + subsection_name + "' at line " + std::to_string(line_number));
+                }
+            }
+            else
+            {
+                // this is a section switch
+                iss >> section_name;
+
+                // Read in problem name
+                if (section_name == "STOCH")
+                {
+                    iss >> problem_name;
+                }
+                else if (section_name == "INDEP")
+                {
+                    iss >> subsection_name;
+
+                    // Check if subsection_name is one of the supported types
+                    if (subsection_name != "DISCRETE" && subsection_name != "NORMAL" && subsection_name != "UNIFORM")
+                    {
+                        throw std::runtime_error("Unsupported subsection type '" + subsection_name + "' at line " + std::to_string(line_number));
+                    }
+                }
+                else if (section_name == "ENDATA")
+                {
+                    // Signifies end of sto file
+                    break;
+                }
+                else
+                {
+                    // Handle other unexpected section names
+                    throw std::runtime_error("Unsupported section '" + section_name + "' at line " + std::to_string(line_number));
+                }
+            }
+        }
+
+        // process indep_discrete_mapping
+        for (int i = 0; i < indep_discrete_mapping_index.size(); i++) {
+            int pos = indep_discrete_mapping_index[i];
+            std::vector<double> values, probs;
+            // find the entries corresponding to that col_name, row_name
+            auto vps = indep_discrete_mapping[indep_pos[pos]];
+            for (auto t: vps) {
+                values.push_back(std::get<0>(t));
+                probs.push_back(std::get<1>(t));
+            }
+
+            auto ptr = std::make_unique<SMPSIndepDiscrete>(values, probs);
+            indep_elem[pos] = std::move(ptr);
+        }
+        file.close();
+    }
+
+    std::string SMPSStoch::summary() const
+    {
+        // print problem name
+        std::string s = "PROBLEM NAME: " + problem_name + "\n";
+        // loop through indep_pos and indep_elem to print out the summary
+        s += "INDEP SECTION\n";
+        for (int i = 0; i < indep_pos.size(); i++) {
+            s += std::get<0>(indep_pos[i]) + " " + std::get<1>(indep_pos[i]) + " ";
+            s += indep_elem[i]->element_summary() + "\n";
+        }
+        
+        return s;
+    }
+
 } // namespace smps
