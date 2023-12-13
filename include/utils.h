@@ -45,22 +45,4 @@ private:
     std::vector<std::string> index_to_name_vector;
 };
 
-/**
- * SparsityPattern is a class that denotes the position of non-zero vectors.
- * The positions are stored in the order they are added.
- * So when aligned with a vector, it can denote a sparse matrix.
- * It is assumed that no duplicate entries will be added.
- */
-class SparsityPattern {
-    public:
-    // (row, col) position of non-zero
-    std::vector<std::tuple<int, int> > pattern;
-
-    // add a (row, col) element
-    void add_element(int row, int col);
-
-    // number of sparse elements
-    int length() const;
-};
-
 #endif // UTILS_H

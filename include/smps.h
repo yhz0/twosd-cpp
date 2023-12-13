@@ -11,7 +11,7 @@
 #include <random>
 #include <memory>
 
-#include "sparse_matrix.h" // for SparseMatrix
+#include "sparse.h"        // for SparseMatrix
 #include "utils.h"         // for BijectiveMap
 
 namespace smps
