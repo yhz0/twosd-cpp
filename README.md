@@ -121,11 +121,13 @@ Although $\pi_i$ are usually dense, $r(\omega_j), T(\omega_j)$ are sparse, and G
 $$r(\omega_j) = \bar r + \Delta r(\omega_j) \\ T(\omega_j) = \bar T + \Delta T(\omega_j)$$
 
 Therefore, 
-$$\pi_i(r(\omega_j) - T(\omega_j)x) = \pi_i \bar r - \pi \bar T x + \pi_i \Delta r(\omega_j) - \pi_i \Delta T(\omega_j)x = \bar \alpha_i +\bar \beta_ix + \alpha_{ij}$$
+$$\pi_i(r(\omega_j) - T(\omega_j)x) = \pi_i \bar r - \pi \bar T x + \pi_i \Delta r(\omega_j) - \pi_i \Delta T(\omega_j)x = \bar \alpha_i +\bar \beta_ix + \alpha_{ij} + \beta_{ij} x$$.
 
 There are four coefficients here, we denote $\bar \alpha_i = \pi_i \bar r$, $\beta_i = - \pi_i \bar T$, $\alpha_{ij} = \pi_i \Delta r(\omega_j)$, $\beta_{ij} = - \pi_i \Delta T(\omega_j)$.
 
 The first two coefficients, corresponding to the fixed part, are usually dense. To obtain them, a sparse matrix computation is needed so we compute them on CPU. This computation can be carried out as soon as the new dual extreme point is discovered. We will copy the fixed coefficients to GPU for further use.
+
+There are a special case of the above computations: sometimes $\Delta T(\omega_j) = 0$. Therefore there will be no $\beta_{ij}$ terms. All the below computations can be significantly simplified.
 
 ### Preparing $\alpha_{ij}$ and $\beta_{ij}$
 
