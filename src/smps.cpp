@@ -276,7 +276,7 @@ namespace smps
         {
             std::string current_name = row_name_map.get_name(i).value();
 
-            if (stage < row_names.size() && row_names[stage] == current_name)
+            if ((unsigned)stage < row_names.size() && row_names[stage] == current_name)
             {
                 stage++;
                 cnt = 0;
@@ -307,7 +307,7 @@ namespace smps
         {
             std::string current_name = col_name_map.get_name(i).value();
 
-            if (stage < column_names.size() && column_names[stage] == current_name)
+            if ((unsigned)stage < column_names.size() && column_names[stage] == current_name)
             {
                 stage++;
                 cnt = 0;
@@ -510,7 +510,7 @@ namespace smps
         }
 
         // process indep_discrete_mapping
-        for (int i = 0; i < indep_discrete_mapping_index.size(); i++) {
+        for (size_t i = 0; i < indep_discrete_mapping_index.size(); i++) {
             int pos = indep_discrete_mapping_index[i];
             std::vector<double> values, probs;
             // find the entries corresponding to that col_name, row_name
@@ -532,7 +532,7 @@ namespace smps
         std::string s = "PROBLEM NAME: " + problem_name + "\n";
         // loop through indep_pos and indep_elem to print out the summary
         s += "INDEP SECTION\n";
-        for (int i = 0; i < indep_pos.size(); i++) {
+        for (size_t i = 0; i < indep_pos.size(); i++) {
             s += std::get<0>(indep_pos[i]) + " " + std::get<1>(indep_pos[i]) + " ";
             s += indep_elem[i]->element_summary() + "\n";
         }
