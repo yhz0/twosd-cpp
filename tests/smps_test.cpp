@@ -2,6 +2,9 @@
 #include "../external/catch_amalgamated.hpp"
 #include "smps.h"
 #include <limits>
+#include <tuple>
+
+#include <iostream>
 
 using Catch::Approx;
 
@@ -50,23 +53,30 @@ TEST_CASE("SMPSCore Implicit TIME File Parsing", "[SMPSImplicitTime]") {
     smps::SMPSCore cor("tests/lands/lands.cor");
     smps::SMPSImplicitTime tim("tests/lands/lands.tim");
 
+    
     SECTION("Row tests") {
-        REQUIRE(tim.get_row_stage("OBJ", cor.row_name_map) == -1);
-        REQUIRE(tim.get_row_stage("S1C1", cor.row_name_map) == 0);
-        REQUIRE(tim.get_row_stage("S1C2", cor.row_name_map) == 0);
-
-        REQUIRE(tim.get_row_stage("S2C1", cor.row_name_map) == 1);
-        REQUIRE(tim.get_row_stage("S2C7", cor.row_name_map) == 1);
+        REQUIRE(tim.get_row_stage("OBJ", cor.row_name_map) == std::make_tuple(-1, -1));
+        REQUIRE(tim.get_row_stage("S1C1", cor.row_name_map) == std::make_tuple(0, 0));
+        REQUIRE(tim.get_row_stage("S1C2", cor.row_name_map) == std::make_tuple(0, 1));
+        REQUIRE(tim.get_row_stage("S2C1", cor.row_name_map) == std::make_tuple(1, 0));
+        REQUIRE(tim.get_row_stage("S2C7", cor.row_name_map) == std::make_tuple(1, 6));
 
     }
 
     SECTION("Column tests") {
-        REQUIRE(tim.get_col_stage("RHS", cor.col_name_map) == -1);
-        REQUIRE(tim.get_col_stage("X1", cor.col_name_map) == 0);
-        REQUIRE(tim.get_col_stage("X4", cor.col_name_map) == 0);
-        REQUIRE(tim.get_col_stage("Y11", cor.col_name_map) == 1);
-        REQUIRE(tim.get_col_stage("Y21", cor.col_name_map) == 1);
-        REQUIRE(tim.get_col_stage("Y42", cor.col_name_map) == 1);
+        REQUIRE(tim.get_col_stage("RHS", cor.col_name_map) == std::make_tuple(-1, -1));
+        REQUIRE(tim.get_col_stage("X1", cor.col_name_map) == std::make_tuple(0, 0));
+        REQUIRE(tim.get_col_stage("X4", cor.col_name_map) == std::make_tuple(0, 3));
+        REQUIRE(tim.get_col_stage("Y11", cor.col_name_map) == std::make_tuple(1, 0));
+        REQUIRE(tim.get_col_stage("Y21", cor.col_name_map) == std::make_tuple(1, 1));
+        REQUIRE(tim.get_col_stage("Y42", cor.col_name_map) == std::make_tuple(1, 7));
+    }
+
+    SECTION("Size Tests") {
+        REQUIRE(tim.nrows(0, cor.row_name_map) == 2);
+        REQUIRE(tim.nrows(1, cor.row_name_map) == 7);
+        REQUIRE(tim.ncols(0, cor.col_name_map) == 4);
+        REQUIRE(tim.ncols(1, cor.col_name_map) == 12);
     }
 
 }

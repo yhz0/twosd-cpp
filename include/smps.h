@@ -47,12 +47,22 @@ namespace smps
 class SMPSTime
     {
     public:
-        // Returns the stage number of a row given its name and a bijective mapping of row names.
+        // Returns the stage number and the index relative to the
+        // first row in the stage given a row name and a bijective mapping of row names.
+        // The objective row does not count, and returns (-1, -1).
         // The root stage is counted as stage 0.
-        virtual int get_row_stage(std::string row_name, const BijectiveMap &row_name_map) const = 0;
+        virtual std::tuple<int, int> get_row_stage(std::string row_name, const BijectiveMap &row_name_map) const = 0;
 
-        // Returns the stage number of a column given its name and a bijective mapping of column names.
-        virtual int get_col_stage(std::string col_name, const BijectiveMap &col_name_map) const = 0;
+        // Returns the stage number and the index relative to the 
+        // first column in the stage given a column name and a bijective mapping of column names.
+        // If the given name is "RHS" or "rhs" then returns (-1, -1).
+        virtual std::tuple<int, int> get_col_stage(std::string col_name, const BijectiveMap &col_name_map) const = 0;
+
+        // Returns the numbers of rows in the given stage, excluding the objective row
+        int nrows(int stage, const BijectiveMap &row_name_map);
+
+        // Returns the numbers of columns in the given stage.
+        int ncols(int stage, const BijectiveMap &col_name_map);
     };
 
     class SMPSImplicitTime : public SMPSTime
@@ -62,8 +72,8 @@ class SMPSTime
         // filename: Path to the implicit SMPS time file.
         SMPSImplicitTime(const std::string &filename);
 
-        int get_row_stage(std::string row_name, const BijectiveMap &row_name_map) const override;
-        int get_col_stage(std::string col_name, const BijectiveMap &col_name_map) const override;
+        std::tuple<int, int> get_row_stage(std::string row_name, const BijectiveMap &row_name_map) const override;
+        std::tuple<int, int> get_col_stage(std::string col_name, const BijectiveMap &col_name_map) const override;
 
     private:
         std::string problem_name;             // Name of the problem.
