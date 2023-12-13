@@ -145,7 +145,7 @@ We note that these coefficients do not depend on $x$ in any way, so they can be 
 With all the coefficients ready, $x$ and the shortened $x$ will be copied into the read-only device constant memory. The device will do the following:
 
 1. For the fixed part, an SGEMV matrix-vector multiplication to compute $\bar \alpha_i + \bar \beta_i x$.
-2. For the random part, a batched SGEMV matrix-vector multiplication to compute $\alpha_{ij} + \beta_{ij} x$.
+2. For the random part, a batched SGEMV matrix-vector multiplication to compute $\alpha_{ij} + \beta_{ij} x$. (This step will be skipped if $\Delta T = 0$, and only $\alpha_{ij}$ is directly used.)
 3. Add the fixed part result to the random part result to recover $\pi_i(r(\omega_j) - T(\omega_j)x)$.
 
 ### Parallel Reduction
