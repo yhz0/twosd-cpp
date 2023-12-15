@@ -1,4 +1,4 @@
-#define CATCH_CONFIG_MAIN // This tells Catch to provide a main() function
+#define CATCH_CONFIG_MAIN
 #include "../external/catch_amalgamated.hpp"
 #include "sparse.h"
 
@@ -7,9 +7,10 @@ using Catch::Approx;
 TEST_CASE("SparseMatrix<float> functionality", "[SparseMatrix]")
 {
     // Setup
-    SparsityPattern pattern({0, 1, 2}, {1, 0, 2});
+    std::vector<int> row_indices = {0, 1, 2};
+    std::vector<int> col_indices = {1, 0, 2};
     std::vector<float> values = {1.0f, 2.0f, 3.0f};
-    SparseMatrix<float> matrix(pattern, values, 3, 3);
+    SparseMatrix<float> matrix(row_indices, col_indices, values, 3, 3);
 
     SECTION("Setup and Multiplication")
     {
@@ -34,7 +35,6 @@ TEST_CASE("SparseMatrix<float> functionality", "[SparseMatrix]")
 
     SECTION("Transpose Matrix-Vector Multiplication")
     {
-
         // Test multiplication with the transpose
         std::vector<float> vec = {1.0f, 2.0f, 3.0f};
         std::vector<float> result;
@@ -52,11 +52,12 @@ TEST_CASE("SparseMatrix<float> functionality", "[SparseMatrix]")
             {0, 1, 1.0f}, {1, 0, 2.0f}, {2, 2, 3.0f}};
         size_t index = 0;
 
-        for (const auto &element : matrix)
+        for (auto iter = matrix.begin(); iter != matrix.end(); ++iter)
         {
-            REQUIRE(std::get<0>(element.data) == std::get<0>(expectedElements[index]));
-            REQUIRE(std::get<1>(element.data) == std::get<1>(expectedElements[index]));
-            REQUIRE(std::get<2>(element.data) == Approx(std::get<2>(expectedElements[index])));
+            auto element = *iter;
+            REQUIRE(element.row == std::get<0>(expectedElements[index]));
+            REQUIRE(element.col == std::get<1>(expectedElements[index]));
+            REQUIRE(element.val == Approx(std::get<2>(expectedElements[index])));
             ++index;
         }
 

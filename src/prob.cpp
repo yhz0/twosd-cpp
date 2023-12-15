@@ -69,12 +69,15 @@ sp::StageProblem::StageProblem(const smps::SMPSCore &core,
             }
         }
 
-        // TODO: read cost, transfer_block, current_block from core.lpcoefficients
+        // read cost, transfer_block, current_block from core.lpcoefficients
         // iterate through non-zero elements in core
         for (const auto &element : core.lp_coefficients) {
             int cor_row_index, cor_col_index;
             double value;
-            std::tie(cor_row_index, cor_col_index, value) = element.data;
+
+            cor_row_index = element.row;
+            cor_col_index = element.col;
+            value = element.val;
 
             // convert stageness in COR form to stage number and the relative stage index
             int row_index, row_stage, col_index, col_stage;
