@@ -154,7 +154,7 @@ namespace smps
                 {
                     // bound lines has four tokens
                     // the first token is either UP (upper) or LO (lower) or FX (fixed) or FR (free)
-                    // the second token is always BND
+                    // the second token is the bound name
                     // the third token is the name of the column
                     // the fourth token is the bound value
 
@@ -162,12 +162,6 @@ namespace smps
                     double bound_value;
 
                     iss >> bound_type >> dummy >> col_name >> bound_value;
-
-                    // make sure the dummy reads "BND"
-                    if (dummy != "BND")
-                    {
-                        throw std::runtime_error("Expected 'BND' at line " + std::to_string(line_number));
-                    }
 
                     std::optional<int> col_index = col_name_map.get_index(col_name);
                     if (!col_index.has_value())
