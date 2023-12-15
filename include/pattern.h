@@ -7,6 +7,7 @@
 // Stochastic pattern for a single stage.
 class StageStochasticPattern {
 public:
+    StageStochasticPattern() = default;
     StageStochasticPattern(int _stage, const std::vector<int> &_row_index,
                            const std::vector<int> &_col_index, const std::vector<double> &_reference_values,
                            const std::vector<size_t> &_indices_in_scenario);
