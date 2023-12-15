@@ -94,7 +94,7 @@ namespace smps
 
         // generate a random scenario using the given rng.
         // the scenario is stored in omega, which is resized to the correct size
-        void generate_scenario(std::mt19937 &rng, std::vector<double> &omega);
+        std::vector<double> generate_scenario(std::mt19937 &rng);
 
         // returns (row_name, col_name) tuples describing the position of the random elements
         const std::vector<std::tuple<std::string, std::string>>& get_positions() const;

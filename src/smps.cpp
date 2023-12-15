@@ -534,12 +534,14 @@ namespace smps
         return s;
     }
 
-    void SMPSStoch::generate_scenario(std::mt19937 &rng, std::vector<double> &omega)
+    std::vector<double> SMPSStoch::generate_scenario(std::mt19937 &rng)
     {
+        std::vector<double> omega;
         omega.resize(indep_elem.size());
         for(size_t i = 0; i < indep_elem.size(); i++) {
             omega[i] = indep_elem[i]->generate(rng);
         }
+        return omega;
     }
 
     const std::vector<std::tuple<std::string, std::string>>& SMPSStoch::get_positions() const

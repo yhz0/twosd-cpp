@@ -85,8 +85,7 @@ TEST_CASE("SMPS STO file parsing", "[SMPSStoch]") {
 
     // test generation
     std::mt19937 rng(0);
-    std::vector<double> scenario;
-    sto.generate_scenario(rng, scenario);
+    auto scenario = sto.generate_scenario(rng);
 
     REQUIRE(scenario.size() == 1);
 
@@ -105,6 +104,6 @@ TEST_CASE("SMPS STO file parsing", "[SMPSStoch]") {
 
     smps::SMPSStoch sto_transship("tests/transship/transship.sto");
     // std::cout << sto_transship.summary() << std::endl;
-    sto_transship.generate_scenario(rng, scenario);
-    REQUIRE(scenario.size() == 7);
+    auto scenario2 = sto_transship.generate_scenario(rng);
+    REQUIRE(scenario2.size() == 7);
 }
