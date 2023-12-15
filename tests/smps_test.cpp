@@ -3,7 +3,7 @@
 #include "smps.h"
 #include <limits>
 #include <tuple>
-
+#include <random>
 #include <iostream>
 
 using Catch::Approx;
@@ -83,6 +83,17 @@ TEST_CASE("SMPS Implicit TIME File Parsing", "[SMPSImplicitTime]") {
 TEST_CASE("SMPS STO file parsing", "[SMPSStoch]") {
     smps::SMPSStoch sto("tests/lands/lands.sto");
 
+    // test generation
+    std::mt19937 rng(0);
+    std::vector<double> scenario;
+    sto.generate_scenario(rng, scenario);
+
+    REQUIRE(scenario.size() == 1);
+
+    // the first element of scenario should be one of 3.0, 5.0 or 7.0
+    bool lands_test1_passed = scenario[0] == 3.0 || scenario[0] == 5.0 || scenario[0] == 7.0;
+    REQUIRE(lands_test1_passed);
+
     // display summary
     // std::cout << sto.summary() << std::endl;
 
@@ -92,7 +103,8 @@ TEST_CASE("SMPS STO file parsing", "[SMPSStoch]") {
     // smps::SMPSStoch sto_sgsc("tests/sto_tests/sgsc.sto");
     // std::cout << sto_sgsc.summary() << std::endl;
 
-    // smps::SMPSStoch sto_transship("tests/sto_tests/transship.sto");
+    smps::SMPSStoch sto_transship("tests/sto_tests/transship.sto");
     // std::cout << sto_transship.summary() << std::endl;
-
+    sto_transship.generate_scenario(rng, scenario);
+    REQUIRE(scenario.size() == 7);
 }

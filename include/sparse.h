@@ -67,5 +67,4 @@ private:
     std::vector<T> values;
 };
 
-
 #endif // SPARSE_H

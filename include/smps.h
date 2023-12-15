@@ -11,8 +11,8 @@
 #include <random>
 #include <memory>
 
-#include "sparse.h"        // for SparseMatrix
-#include "utils.h"         // for BijectiveMap
+#include "sparse.h" // for SparseMatrix
+#include "utils.h"  // for BijectiveMap
 
 namespace smps
 {
@@ -82,6 +82,8 @@ namespace smps
         std::vector<std::string> period_names; // Names of the periods.
     };
 
+    // Representation of SMPS sto input file.
+    // Currently it only supports INDEP input.
     class SMPSStoch
     {
     public:
@@ -89,6 +91,13 @@ namespace smps
 
         // returns a string summary of what the smps contains for debugging purposes
         std::string summary() const;
+
+        // generate a random scenario using the given rng.
+        // the scenario is stored in omega, which is resized to the correct size
+        void generate_scenario(std::mt19937 &rng, std::vector<double> &omega);
+
+        // returns (row_name, col_name) tuples describing the position of the random elements
+        const std::vector<std::tuple<std::string, std::string>>& get_positions() const;
 
     private:
         // Nested abstract class for stochastic elements
@@ -108,10 +117,10 @@ namespace smps
         {
         public:
             SMPSIndepDiscrete(const std::vector<double> &_values,
-                              const std::vector<double> &_probs):
-                        dist(_probs.begin(), _probs.end()), values(_values) {}
+                              const std::vector<double> &_probs) : dist(_probs.begin(), _probs.end()), values(_values) {}
             double generate(std::mt19937 &rng) override;
             std::string element_summary() const override;
+
         private:
             std::discrete_distribution<int> dist;
             std::vector<double> values;
@@ -145,10 +154,10 @@ namespace smps
         std::string problem_name;
 
         // position of the elements using (row_name, col_name) format
-        std::vector<std::tuple<std::string, std::string> > indep_pos;
+        std::vector<std::tuple<std::string, std::string>> indep_pos;
 
         // the distribution of random elements
-        std::vector<std::unique_ptr<SMPSIndepElement> > indep_elem;
+        std::vector<std::unique_ptr<SMPSIndepElement>> indep_elem;
     };
 
 }
