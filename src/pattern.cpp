@@ -32,8 +32,8 @@ StochasticPattern StochasticPattern::from_smps(const smps::SMPSCore &cor, const 
         int stage;
         double reference_value;
 
-        std::string row_name, col_name;
-        std::tie(row_name, col_name) = p;
+        std::string col_name, row_name;
+        std::tie(col_name, row_name) = p;
 
         // get the stage and index of the row and column
         int row_stage, row_index, col_stage, col_index;

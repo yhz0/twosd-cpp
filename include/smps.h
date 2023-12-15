@@ -153,7 +153,7 @@ namespace smps
         // instance name indicated by the sto file
         std::string problem_name;
 
-        // position of the elements using (row_name, col_name) format
+        // position of the elements using (col_name, row_name) format
         std::vector<std::tuple<std::string, std::string>> indep_pos;
 
         // the distribution of random elements

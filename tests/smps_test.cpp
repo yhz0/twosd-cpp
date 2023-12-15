@@ -103,7 +103,7 @@ TEST_CASE("SMPS STO file parsing", "[SMPSStoch]") {
     // smps::SMPSStoch sto_sgsc("tests/sto_tests/sgsc.sto");
     // std::cout << sto_sgsc.summary() << std::endl;
 
-    smps::SMPSStoch sto_transship("tests/sto_tests/transship.sto");
+    smps::SMPSStoch sto_transship("tests/transship/transship.sto");
     // std::cout << sto_transship.summary() << std::endl;
     sto_transship.generate_scenario(rng, scenario);
     REQUIRE(scenario.size() == 7);
