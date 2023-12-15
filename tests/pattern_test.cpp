@@ -64,4 +64,24 @@ TEST_CASE("Test StochasticPattern from_smps on instances", "[StochasticPattern]"
             REQUIRE(pattern.reference_values[i] == Approx(expected_reference_value));
         }
     }
+
+    // Note, if in the future, multistage problems are needed, then this test should be updated.
+    SECTION("Extraction of StageStochasticPattern") {
+        smps::SMPSCore cor("tests/lands/lands.cor");
+        smps::SMPSImplicitTime tim("tests/lands/lands.tim");
+        smps::SMPSStoch sto("tests/lands/lands.sto");
+
+        StageStochasticPattern stage_pattern = StochasticPattern::from_smps(cor, tim, sto).filter_by_stage(1);
+
+        int expected_col_index = -1;
+        int expected_row_index = 4;
+        int expected_stage = 1;
+        double expected_reference_value = 0.0;
+
+        REQUIRE(stage_pattern.stage == expected_stage);
+        REQUIRE(stage_pattern.col_index[0] == expected_col_index);
+        REQUIRE(stage_pattern.row_index[0] == expected_row_index);
+        REQUIRE(stage_pattern.reference_values[0] == expected_reference_value);
+
+    }
 }
