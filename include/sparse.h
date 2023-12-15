@@ -2,6 +2,7 @@
 #define SPARSE_H
 
 #include <vector>
+#include <tuple>
 
 /**
  * SparsityPattern is a class that denotes the position of non-zero vectors.
@@ -45,6 +46,9 @@ public:
     // This function has no size check.
     void add_element(int row, int col, T value);
 
+    // Number of non-zero elements
+    size_t nnz() const;
+
     // Retrieves the value of an element at a specified position in the matrix.
     // If no value has been explicitly added at the position, returns a default value (zero).
     // This function has no size check.
@@ -61,6 +65,65 @@ public:
     // The result vector will be resized to appropriate size.
     // vec: The dense vector to be multiplied with the matrix.
     void multiply_transpose_with_vector(const std::vector<T> &vec, std::vector<T> &result) const;
+
+    // Nested Iterator class to allow iterating through the elements.
+    class Iterator
+    {
+    public:
+        Iterator(const SparseMatrix &matrix, size_t pos = 0)
+            : matrix_(matrix), pos_(pos) {}
+
+        bool operator!=(const Iterator &other) const
+        {
+            return pos_ != other.pos_;
+        }
+
+        const Iterator &operator++()
+        {
+            pos_++;
+            return *this;
+        }
+
+        std::pair<int, int> position() const
+        {
+            return std::make_pair(matrix_.sparsity_pattern.row_indices[pos_],
+                                  matrix_.sparsity_pattern.col_indices[pos_]);
+        }
+
+        T value() const
+        {
+            return matrix_.values[pos_];
+        }
+
+        struct Element {
+            std::tuple<int, int, T> data;
+
+            Element(int row, int col, T val)
+                : data(std::make_tuple(row, col, val)) {}
+        };
+
+        Element operator*() const {
+            return Element(matrix_.sparsity_pattern.row_indices[pos_],
+                           matrix_.sparsity_pattern.col_indices[pos_],
+                           matrix_.values[pos_]);
+        }
+
+    private:
+        const SparseMatrix &matrix_;
+        size_t pos_;
+    };
+
+    // Begin iterator
+    Iterator begin() const
+    {
+        return Iterator(*this);
+    }
+
+    // End iterator
+    Iterator end() const
+    {
+        return Iterator(*this, values.size());
+    }
 
 private:
     size_t num_rows, num_cols;

@@ -322,7 +322,7 @@ namespace smps
         throw std::runtime_error("Invalid col in get_col_stage!");
     }
 
-    int SMPSTime::nrows(int stage, const BijectiveMap &row_name_map)
+    int SMPSTime::nrows(int stage, const BijectiveMap &row_name_map) const
     {
         int cnt = 0;
         for (int i = 0; i < row_name_map.size(); i++)
@@ -331,7 +331,7 @@ namespace smps
         return cnt;
     }
 
-    int SMPSTime::ncols(int stage, const BijectiveMap &col_name_map)
+    int SMPSTime::ncols(int stage, const BijectiveMap &col_name_map) const
     {
         int cnt = 0;
         for (int i = 0; i < col_name_map.size(); i++)

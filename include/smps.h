@@ -59,10 +59,10 @@ namespace smps
         virtual std::tuple<int, int> get_col_stage(std::string col_name, const BijectiveMap &col_name_map) const = 0;
 
         // Returns the numbers of rows in the given stage, excluding the objective row
-        int nrows(int stage, const BijectiveMap &row_name_map);
+        int nrows(int stage, const BijectiveMap &row_name_map) const;
 
         // Returns the numbers of columns in the given stage.
-        int ncols(int stage, const BijectiveMap &col_name_map);
+        int ncols(int stage, const BijectiveMap &col_name_map) const;
     };
 
     class SMPSImplicitTime : public SMPSTime

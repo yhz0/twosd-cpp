@@ -8,8 +8,7 @@ template <typename T>
 SparseMatrix<T>::SparseMatrix() : num_rows(0), num_cols(0), sparsity_pattern(), values() {}
 
 template <typename T>
-SparseMatrix<T>::SparseMatrix(const SparsityPattern &_sparsity_pattern, const std::vector<T> &_values, size_t _num_rows, size_t _num_cols) :
-    num_rows(_num_rows), num_cols(_num_cols), sparsity_pattern(_sparsity_pattern), values(_values)
+SparseMatrix<T>::SparseMatrix(const SparsityPattern &_sparsity_pattern, const std::vector<T> &_values, size_t _num_rows, size_t _num_cols) : num_rows(_num_rows), num_cols(_num_cols), sparsity_pattern(_sparsity_pattern), values(_values)
 {
     // make sure the size matches
     if (sparsity_pattern.size() != values.size())
@@ -31,6 +30,12 @@ void SparseMatrix<T>::add_element(int row, int col, T value)
     sparsity_pattern.row_indices.push_back(row);
     sparsity_pattern.col_indices.push_back(col);
     values.push_back(value);
+}
+
+template <typename T>
+size_t SparseMatrix<T>::nnz() const
+{
+    return values.size();
 }
 
 template <typename T>
@@ -75,7 +80,7 @@ void SparseMatrix<T>::multiply_transpose_with_vector(const std::vector<T> &vec, 
     {
         throw std::invalid_argument("SparseMatrix: vector dimension does not match");
     }
-    
+
     // resize and initialize result vector
     result.resize(num_cols);
     std::fill(result.begin(), result.end(), T());

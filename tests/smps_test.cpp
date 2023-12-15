@@ -53,7 +53,6 @@ TEST_CASE("SMPS Implicit TIME File Parsing", "[SMPSImplicitTime]") {
     smps::SMPSCore cor("tests/lands/lands.cor");
     smps::SMPSImplicitTime tim("tests/lands/lands.tim");
 
-    
     SECTION("Row tests") {
         REQUIRE(tim.get_row_stage("OBJ", cor.row_name_map) == std::make_tuple(-1, -1));
         REQUIRE(tim.get_row_stage("S1C1", cor.row_name_map) == std::make_tuple(0, 0));
