@@ -21,6 +21,7 @@ StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPS
     // Reserve space for vectors
     last_stage_var_names.resize(nvars_last);
     current_stage_var_names.resize(nvars_current);
+    current_stage_row_names.resize(nrows);
     lb.resize(nvars_current);
     ub.resize(nvars_current);
     cost.resize(nvars_current, 0.0);

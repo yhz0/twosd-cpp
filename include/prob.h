@@ -55,7 +55,6 @@ public:
     static StageProblem from_smps(const smps::SMPSCore &cor, const smps::SMPSTime &tim,
                                   const smps::SMPSStoch &sto, int stage);
 
-private:
     // length of last stage variables (columns)
     // in this representation, we assume that the column numbers are integers and consecutive
     // the last stage variables comes first, then the current stage variables
