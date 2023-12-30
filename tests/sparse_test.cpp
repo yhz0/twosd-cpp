@@ -64,3 +64,35 @@ TEST_CASE("SparseMatrix<float> functionality", "[SparseMatrix]")
         REQUIRE(index == matrix.nnz()); // Ensure all non-zero elements are iterated
     }
 }
+
+TEST_CASE("SparseMatrix<double> and CSR format functionality", "[SparseMatrix][CSR]")
+{
+    // Setup for SparseMatrix<double>
+    std::vector<int> row_indices = {0, 1, 2};
+    std::vector<int> col_indices = {1, 0, 2};
+    std::vector<double> values = {1.0, 2.0, 3.0};
+    SparseMatrix<double> matrix(row_indices, col_indices, values, 3, 3);
+
+    // Convert to CSR format
+    SparseMatrixCSR csrMatrix(matrix);
+
+    SECTION("CSR format conversion")
+    {
+        // Testing CSR format
+        REQUIRE(csrMatrix.getRowBegin().size() == 4);
+        REQUIRE(csrMatrix.getRowBegin()[0] == 0);
+        REQUIRE(csrMatrix.getRowBegin()[1] == 1);
+        REQUIRE(csrMatrix.getRowBegin()[2] == 2);
+        REQUIRE(csrMatrix.getRowBegin()[3] == 3);
+
+        REQUIRE(csrMatrix.getColumnIndex().size() == 3);
+        REQUIRE(csrMatrix.getColumnIndex()[0] == 1);
+        REQUIRE(csrMatrix.getColumnIndex()[1] == 0);
+        REQUIRE(csrMatrix.getColumnIndex()[2] == 2);
+
+        REQUIRE(csrMatrix.getValues().size() == 3);
+        REQUIRE(csrMatrix.getValues()[0] == Approx(1.0));
+        REQUIRE(csrMatrix.getValues()[1] == Approx(2.0));
+        REQUIRE(csrMatrix.getValues()[2] == Approx(3.0));
+    }
+}

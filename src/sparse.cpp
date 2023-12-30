@@ -99,6 +99,70 @@ typename SparseMatrix<T>::Iterator SparseMatrix<T>::end() const {
     return Iterator(*this, values.size());
 }
 
+template <typename T>
+size_t SparseMatrix<T>::get_num_rows() const
+{
+    return num_rows;
+}
+
+template <typename T>
+size_t SparseMatrix<T>::get_num_cols() const
+{
+    return num_cols;
+}
+
+
 // Explicit template instantiation
 template class SparseMatrix<double>;
 template class SparseMatrix<float>;
+
+SparseMatrixCSR::SparseMatrixCSR(const SparseMatrix<double>& matrix) {
+    convertToCSR(matrix);
+}
+
+const std::vector<int>& SparseMatrixCSR::getRowBegin() const {
+    return cbeg;
+}
+
+const std::vector<int>& SparseMatrixCSR::getColumnIndex() const {
+    return cind;
+}
+
+const std::vector<double>& SparseMatrixCSR::getValues() const {
+    return cval;
+}
+
+void SparseMatrixCSR::convertToCSR(const SparseMatrix<double>& matrix) {
+    size_t numRows = matrix.get_num_rows();
+
+    // Initialize row begin array with zeroes
+    cbeg.assign(numRows + 1, 0);
+
+    // First pass to count the number of elements in each row
+    for (auto it = matrix.begin(); it != matrix.end(); ++it) {
+        int row = it.position().first;
+        cbeg[row + 1]++;
+    }
+
+    // Cumulative sum to get actual starting positions
+    for (size_t i = 1; i < cbeg.size(); i++) {
+        cbeg[i] += cbeg[i - 1];
+    }
+
+    // Resize cind and cval to accommodate all non-zero elements
+    cind.resize(matrix.nnz());
+    cval.resize(matrix.nnz());
+
+    // Second pass to fill cind and cval
+    std::vector<int> next_pos(numRows, 0);
+    for (auto it = matrix.begin(); it != matrix.end(); ++it) {
+        int row = it.position().first;
+        int col = it.position().second;
+        double value = static_cast<double>(it.value());
+
+        int pos = cbeg[row] + next_pos[row];
+        cind[pos] = col;
+        cval[pos] = value;
+        next_pos[row]++;
+    }
+}

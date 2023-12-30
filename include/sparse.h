@@ -60,11 +60,31 @@ public:
     Iterator begin() const;
     Iterator end() const;
 
+    size_t get_num_rows() const;
+    size_t get_num_cols() const;
+    
 private:
     size_t num_rows, num_cols;
     std::vector<int> row_indices;
     std::vector<int> col_indices;
     std::vector<T> values;
+};
+
+// CSR representation
+class SparseMatrixCSR {
+public:
+    explicit SparseMatrixCSR(const SparseMatrix<double>& matrix);
+
+    const std::vector<int>& getRowBegin() const;
+    const std::vector<int>& getColumnIndex() const;
+    const std::vector<double>& getValues() const;
+
+private:
+    std::vector<int> cbeg;
+    std::vector<int> cind;
+    std::vector<double> cval;
+
+    void convertToCSR(const SparseMatrix<double>& matrix);
 };
 
 #endif // SPARSE_H

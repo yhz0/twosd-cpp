@@ -3,10 +3,8 @@
 
 #include "smps.h"
 #include "pattern.h"    // for StageStochasticPattern
+#include "solver.h"
 #include <memory>   // for std::unique_ptr
-
-// TODO: implement gurobi solver
-class Solver {};
 
 class StageProblem
 {
