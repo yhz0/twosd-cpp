@@ -3,8 +3,9 @@
 
 #include "smps.h"
 #include "pattern.h"    // for StageStochasticPattern
-#include "solver.h"
 #include <memory>   // for std::unique_ptr
+
+class Solver;
 
 class StageProblem
 {
@@ -111,8 +112,11 @@ public:
     // position of random elements in the transfer block or RHS
     StageStochasticPattern stage_stoc_pattern;
 
+    // destructor
+    ~StageProblem();
+
     // the pointer to the solver environment
-    std::unique_ptr<Solver> solver;
+    std::unique_ptr<Solver> solver = nullptr;
 };
 
 #endif // PROB_H

@@ -2,6 +2,7 @@
 #include "../external/catch_amalgamated.hpp"
 #include "smps.h"
 #include "prob.h"
+#include "solver.h"
 
 TEST_CASE("Test Setup for Problem", "[StageProblem]") {
     smps::SMPSCore cor("tests/lands/lands.cor");

@@ -1,5 +1,5 @@
 #include "prob.h"
-
+#include "solver.h"
 #include <stdexcept>  // For std::runtime_error
 
 StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPSTime &tim, 
@@ -121,4 +121,8 @@ StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPS
     return StageProblem(nvars_last, nvars_current, nrows, last_stage_var_names, current_stage_var_names, 
                         current_stage_row_names, transfer_block, current_block, lb, ub, x_base, rhs_bar, 
                         rhs_shift, inequality_directions, cost, cost_shift, stage_stoc_pattern);
+}
+
+StageProblem::~StageProblem()
+{
 }
