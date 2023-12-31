@@ -18,6 +18,9 @@ class Solver
     // this does not set the RHS part of the model
     static Solver from_template(StageProblem &stage_problem);
 
+    // write model to LP file for debug purposes
+    void write_model(const char *filename);
+
     // destructor frees model and environment if not null
     ~Solver();
 

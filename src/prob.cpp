@@ -30,6 +30,10 @@ StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPS
     rhs_shift.resize(nrows, 0.0);  // Assuming rhs_shift is zero initially
     inequality_directions.resize(nrows);
 
+    // Set matrix size
+    transfer_block.resize(nrows, nvars_last);
+    current_block.resize(nrows, nvars_current);
+    
     // Process columns
     for (size_t i = 0; i < total_ncols; ++i)
     {

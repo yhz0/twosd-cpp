@@ -69,7 +69,46 @@ Solver Solver::from_template(StageProblem &stage_problem)
         throw std::runtime_error("Solver::from_template: error adding constraints");
     }
 
+    // copy constraint names
+    for (size_t i = 0; i < stage_problem.nrows; ++i)
+    {
+        error = GRBsetstrattrelement(model, "ConstrName", i, stage_problem.current_stage_row_names[i].c_str());
+        if (error)
+        {
+            throw std::runtime_error("Solver::from_template: error setting constraint names");
+        }
+    }
+
+    // copy variable names
+    for (size_t i = 0; i < stage_problem.nvars_current; ++i)
+    {
+        error = GRBsetstrattrelement(model, "VarName", i, stage_problem.current_stage_var_names[i].c_str());
+        if (error)
+        {
+            throw std::runtime_error("Solver::from_template: error setting variable names");
+        }
+    }
+
     return Solver(env, model);
+}
+
+void Solver::write_model(const char *filename)
+{
+    if (env == nullptr)
+    {
+        throw std::runtime_error("Solver::write_model: environment is null");
+    }
+
+    if (model == nullptr)
+    {
+        throw std::runtime_error("Solver::write_model: model is null");
+    }
+
+    int error = GRBwrite(model, filename);
+    if (error)
+    {
+        throw std::runtime_error("Solver::write_model: error writing model");
+    }
 }
 
 Solver::~Solver()
