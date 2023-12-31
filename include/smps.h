@@ -96,6 +96,9 @@ namespace smps
         // the scenario is stored in omega, which is resized to the correct size
         std::vector<double> generate_scenario(std::mt19937 &rng);
 
+        // returns the number of independent elements
+        size_t get_indep_size() const;
+
         // returns (row_name, col_name) tuples describing the position of the random elements
         const std::vector<std::tuple<std::string, std::string>>& get_positions() const;
 

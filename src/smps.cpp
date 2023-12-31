@@ -548,7 +548,12 @@ namespace smps
         return omega;
     }
 
-    const std::vector<std::tuple<std::string, std::string>>& SMPSStoch::get_positions() const
+    size_t SMPSStoch::get_indep_size() const
+    {
+        return indep_elem.size();
+    }
+
+    const std::vector<std::tuple<std::string, std::string>> &SMPSStoch::get_positions() const
     {
         return indep_pos;
     }

@@ -40,8 +40,8 @@ TEST_CASE("Gurobi Solver Test", "[GurobiSolver]")
     SECTION("Load prob1 LandS")
     {
         Solver solver1 = Solver::from_template(prob1);
-        solver1.write_model("tests/solver_test_1.lp");
-        std::ifstream lpFile("tests/solver_test_1.lp");
+        solver1.write_model("tests/solver_test_lands_1.lp");
+        std::ifstream lpFile("tests/solver_test_lands_1.lp");
         REQUIRE(lpFile.is_open());
 
         std::stringstream buffer;

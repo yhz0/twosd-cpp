@@ -3,6 +3,9 @@
 #include "smps.h"
 #include "prob.h"
 #include "solver.h"
+#include <random>
+
+using Catch::Approx;
 
 TEST_CASE("Test Setup for Problem", "[StageProblem]") {
     smps::SMPSCore cor("tests/lands/lands.cor");
@@ -218,4 +221,82 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]") {
         // Check solver
         CHECK(prob.solver == nullptr);
     }
+}
+
+TEST_CASE("SMPS integrated test on lgsc instance", "[StageProblem]") {
+    smps::SMPSCore cor("tests/lgsc/lgsc.cor");
+    smps::SMPSImplicitTime tim("tests/lgsc/lgsc.tim");
+    smps::SMPSStoch sto("tests/lgsc/lgsc.sto");
+
+    std::mt19937 rng(0);
+
+    StageProblem prob0 = StageProblem::from_smps(cor, tim, sto, 0),
+                 prob1 = StageProblem::from_smps(cor, tim, sto, 1);
+
+    // nrow: 174 348
+    // ncols: 602 1480
+    REQUIRE(prob0.nrows == 174);
+    REQUIRE(prob0.nvars_last == 0);
+    REQUIRE(prob0.nvars_current == 602);
+
+    REQUIRE(prob1.nrows == 348);
+    REQUIRE(prob1.nvars_last == 602);
+    REQUIRE(prob1.nvars_current == 1480);
+
+    // prob0: current block (174, 602)
+    REQUIRE(prob0.current_block.get_num_rows() == 174);
+    REQUIRE(prob0.current_block.get_num_cols() == 602);
+
+    // prob1: current block (348, 1480)
+    REQUIRE(prob1.current_block.get_num_rows() == 348);
+    REQUIRE(prob1.current_block.get_num_cols() == 1480);
+
+    // prob1: transfer block (348, 602)
+    REQUIRE(prob1.transfer_block.get_num_rows() == 348);
+    REQUIRE(prob1.transfer_block.get_num_cols() == 602);
+
+    StochasticPattern patt = StochasticPattern::from_smps(cor, tim, sto);
+
+    // number of RV = 920 / 5 = 184
+    CHECK(sto.get_indep_size() == 184);
+    CHECK(patt.rv_count[0] == 0);
+    CHECK(patt.rv_count[1] == 184);
+
+    // all in stage 1
+    bool all_in_stage_1 = true;
+    for (size_t i = 0; i < patt.stage.size(); ++i) {
+        if (patt.stage[i] != 1) {
+            all_in_stage_1 = false;
+            break;
+        }
+    }
+    CHECK(all_in_stage_1);
+
+    // check the 5th entry
+    // RHS          mBC2R3Pr12
+    // col index is -1
+    // absolute row index is 254
+    // so the relative row index is 254 - 174 = 80
+    // reference value is 100 from COR file
+    // Value 5 50 100 200 500
+    // Probability 0.5 0.2 0.2 0.05 0.05
+
+    CHECK(patt.col_index[4] == -1);
+    CHECK(patt.row_index[4] == 254 - 174);
+    CHECK(patt.reference_values[4] == Approx(100.0));
+
+    // generate a scenario
+    // its dimension should be the same as the number of RVs
+    auto scenario = sto.generate_scenario(rng);
+    CHECK(scenario.size() == 184);
+    
+    // should contain elements from 5, 50, 100, 200, 500
+    bool scenario_ok = true;
+    for (auto &x : scenario) {
+        if (x != 5.0 && x != 50.0 && x != 100.0 && x != 200.0 && x != 500.0) {
+            scenario_ok = false;
+            break;
+        }
+    }
+    CHECK(scenario_ok);
 }
