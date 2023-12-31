@@ -89,6 +89,9 @@ Solver Solver::from_template(StageProblem &stage_problem)
         }
     }
 
+    // update model
+    error = GRBupdatemodel(model);
+
     return Solver(env, model);
 }
 
