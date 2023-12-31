@@ -89,10 +89,12 @@ public:
     std::vector<double> x_base;
 
     // fixed part of current rhs, shift part of current rhs
-    // Ax = A (d+x_base) <= b  === Ad <= b-A*x_base
-    // rhs_bar = b (n_rows, )
+    // If we denote current stage variable as x,
+    // and last stage variable as z (usually given in parameters)
+    // Tz + Ax <= r =>  A (d+x_base) <= r  === Ad <= r -A*x_base - Tz
+    // rhs_bar = r (n_rows, )
     // rhs_shift = A*x_base (n_rows, )
-    // so the true rhs should be rhs_bar - A*x_base
+    // so the true rhs should be rhs_bar - A*x_base - Tz
     std::vector<double> rhs_bar, rhs_shift;
 
     // directions of inequalities in current stage

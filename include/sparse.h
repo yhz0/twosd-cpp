@@ -32,6 +32,11 @@ public:
     // multiply the transpose of the matrix with a vector (as a column vector) and store the result in result
     void multiply_transpose_with_vector(const std::vector<T> &vec, std::vector<T> &result) const;
 
+    // result -= this * vec
+    // subtracts the result of this * vec from result
+    // assuming that result is already initialized to the correct size
+    void subtract_multiply_with_vector(const std::vector<T> &vec, std::vector<T> &result) const;
+
     // Iterator class
     // This class is used to iterate through the non-zero elements of the matrix
     class Iterator {

@@ -54,6 +54,18 @@ void SparseMatrix<T>::multiply_transpose_with_vector(const std::vector<T> &vec, 
     }
 }
 
+template <typename T>
+void SparseMatrix<T>::subtract_multiply_with_vector(const std::vector<T> &vec, std::vector<T> &result) const
+{
+    // if (result.size() < num_rows) {
+    //     throw std::runtime_error("SparseMatrix::subtract_multiply_with_vector: result vector has incorrect size");
+    // }
+
+    for (size_t i = 0; i < values.size(); ++i) {
+        result[row_indices[i]] -= values[i] * vec[col_indices[i]];
+    }
+}
+
 // Iterator class
 template <typename T>
 SparseMatrix<T>::Iterator::Iterator(const SparseMatrix &matrix, size_t pos) 

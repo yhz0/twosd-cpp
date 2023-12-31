@@ -63,6 +63,19 @@ TEST_CASE("SparseMatrix<float> functionality", "[SparseMatrix]")
 
         REQUIRE(index == matrix.nnz()); // Ensure all non-zero elements are iterated
     }
+
+    SECTION("Test in-place subtraction") {
+        std::vector<float> vec = {2.0f, 3.0f, 4.0f}; // Example vector for multiplication
+        std::vector<float> result = {10.0f, 20.0f, 30.0f}; // Initialize result with non-zero values
+        std::vector<float> expected_result = {10.0f - 1.0f * 3.0f, 20.0f - 2.0f * 2.0f, 30.0f - 3.0f * 4.0f}; // Expected result after subtraction
+
+        matrix.subtract_multiply_with_vector(vec, result);
+
+        REQUIRE(result.size() == expected_result.size());
+        for (size_t i = 0; i < result.size(); ++i) {
+            REQUIRE(result[i] == Approx(expected_result[i])); // Check each element
+        }
+    }
 }
 
 TEST_CASE("SparseMatrix<double> and CSR format functionality", "[SparseMatrix][CSR]")
