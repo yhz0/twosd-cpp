@@ -129,26 +129,30 @@ namespace smps
 
                     std::string dummy, row_name;
                     double coefficient;
-                    iss >> dummy >> row_name >> coefficient;
-
+                    iss >> dummy;
+                    
                     // make sure the dummy reads "RHS"
                     if (dummy != "RHS")
                     {
                         throw std::runtime_error("Expected 'RHS' at line " + std::to_string(line_number));
                     }
 
-                    std::optional<int> row_index = row_name_map.get_index(row_name);
-                    if (!row_index.has_value())
+                    while (iss >> row_name >> coefficient)
                     {
-                        // the row name is not in the map
-                        // throw an exception
-                        throw std::runtime_error("Row name '" + row_name + "' not found at line " + std::to_string(line_number));
+                        std::optional<int> row_index = row_name_map.get_index(row_name);
+                        if (!row_index.has_value())
+                        {
+                            // the row name is not in the map
+                            // throw an exception
+                            throw std::runtime_error("Row name '" + row_name + "' not found at line " + std::to_string(line_number));
+                        }
+                        else
+                        {
+                            int current_row_index = row_index.value();
+                            rhs_coefficients[current_row_index] = coefficient;
+                        }
                     }
-                    else
-                    {
-                        int current_row_index = row_index.value();
-                        rhs_coefficients[current_row_index] = coefficient;
-                    }
+
                 }
                 else if (section == "BOUNDS")
                 {
