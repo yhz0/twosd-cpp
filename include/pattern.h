@@ -67,7 +67,10 @@ public:
     std::vector<int> stage;
 
     // the indices of the random variables in the current stage problem
-    // the indices are relative to the transfer block in the current stage problem
+    // important: the variable indices are relative to the last stage,
+    // but the row indices are relative to the current stage.
+    // this can be used to reliably refer to elements in the transfer block
+    // outside the transfer block, the following rule applies:
     // if the row_index is -1, it means the random element is in the cost coefficient
     // if the col_index is -1, it means the random element is in the rhs
     std::vector<int> row_index, col_index;
