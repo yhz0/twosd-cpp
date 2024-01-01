@@ -23,7 +23,7 @@ public:
         const std::vector<double> &ub_,
         const std::vector<double> &rhs_bar_,
         const std::vector<char> &inequality_directions_,
-        const std::vector<double> &cost_,
+        const std::vector<double> &cost_coefficients_,
         const StageStochasticPattern &stage_stoc_pattern_) : nvars_last(nvars_last_),
                                                              nvars_current(nvars_current_),
                                                              nrows(nrows_),
@@ -36,7 +36,7 @@ public:
                                                              ub(ub_),
                                                              rhs_bar(rhs_bar_),
                                                              inequality_directions(inequality_directions_),
-                                                             cost(cost_),
+                                                             cost_coefficients(cost_coefficients_),
                                                              stage_stoc_pattern(stage_stoc_pattern_),
                                                              // private member initializers
                                                              shift_x_base(false),
@@ -93,7 +93,7 @@ public:
 
     // cost coefficients of current stage
     // (nvars_current, )
-    const std::vector<double> cost;
+    const std::vector<double> cost_coefficients;
 
     // position of random elements in the transfer block or RHS
     const StageStochasticPattern stage_stoc_pattern;

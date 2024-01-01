@@ -88,7 +88,7 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]") {
         // REQUIRE(prob.rhs_shift == std::vector<double>{0.0, 0.0});
 
         // Check cost
-        REQUIRE(prob.cost == std::vector<double>{10.0, 7.0, 16.0, 6.0});
+        REQUIRE(prob.cost_coefficients == std::vector<double>{10.0, 7.0, 16.0, 6.0});
 
         // // Check cost_shift
         // REQUIRE(prob.cost_shift == 0.0);
@@ -212,7 +212,7 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]") {
         // CHECK(prob.rhs_shift == std::vector<double>(7, 0.0));
 
         // Check cost
-        CHECK(prob.cost == std::vector<double>{
+        CHECK(prob.cost_coefficients == std::vector<double>{
                                40.0, 45.0, 32.0, 55.0, 24.0, 27.0, 19.2, 33.0, 4.0, 4.5, 3.2, 5.5});
 
         // // Check cost_shift

@@ -20,7 +20,7 @@ Solver Solver::from_template(StageProblem &stage_problem)
     }
 
     // Create model
-    std::vector<double> cost(stage_problem.cost),
+    std::vector<double> cost(stage_problem.cost_coefficients),
                         lb(stage_problem.lb),
                         ub(stage_problem.ub);
     error = GRBnewmodel(env, &model,
