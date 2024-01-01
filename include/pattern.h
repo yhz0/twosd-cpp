@@ -12,38 +12,10 @@ public:
                            const std::vector<int> &_col_index, const std::vector<double> &_reference_values,
                            const std::vector<size_t> &_indices_in_scenario);
 
-    // iterates through through the subset of elments that matches the stage in the full scenario vector
-    class Iterator {
-    public:
-        Iterator(const StageStochasticPattern &pattern, const std::vector<double> &global_scenario_vector, size_t pos = 0);
-
-        bool operator!=(const Iterator &other) const;
-        const Iterator &operator++();
-
-        struct Element {
-            int row_index;
-            int col_index;
-            double scenario_value;
-            double delta_value;
-
-            Element(int _row_index, int _col_index, double _scenario_value, double _delta_value);
-        };
-
-        Element operator*() const;
-
-    private:
-        const StageStochasticPattern &pattern_;
-        const std::vector<double> &global_scenario_vector_;
-        size_t pos_;
-    };
-
-    Iterator begin(const std::vector<double> &global_scenario_vector) const;
-    Iterator end(const std::vector<double> &global_scenario_vector) const;
-
     int stage;
     std::vector<int> row_index, col_index;
     std::vector<double> reference_values;
-    std::vector<size_t> indices_in_scenario;
+    std::vector<size_t> indices_in_scenario; // the indices in a full scenario vector in a multistage case.
     size_t rv_count;
 };
 
