@@ -11,7 +11,6 @@ StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPS
     std::vector<std::string> last_stage_var_names, current_stage_var_names, current_stage_row_names;
     std::vector<double> lb, ub, x_base, rhs_bar, rhs_shift, cost;
     std::vector<char> inequality_directions;
-    double cost_shift = 0.0;
 
     // Initialize variables based on stage
     nvars_last = (stage == 0) ? 0 : tim.ncols(stage - 1, cor.col_name_map);
@@ -122,9 +121,9 @@ StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPS
     StageStochasticPattern stage_stoc_pattern = StochasticPattern::from_smps(cor, tim, sto).filter_by_stage(stage);
 
     // Create and return StageProblem instance
-    return StageProblem(nvars_last, nvars_current, nrows, last_stage_var_names, current_stage_var_names, 
-                        current_stage_row_names, transfer_block, current_block, lb, ub, x_base, rhs_bar, 
-                        rhs_shift, inequality_directions, cost, cost_shift, stage_stoc_pattern);
+    return StageProblem(nvars_last, nvars_current, nrows, last_stage_var_names, current_stage_var_names,
+                        current_stage_row_names, transfer_block, current_block, lb, ub, rhs_bar,
+                        inequality_directions, cost, stage_stoc_pattern);
 }
 
 StageProblem::~StageProblem()

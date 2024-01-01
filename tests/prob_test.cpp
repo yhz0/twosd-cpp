@@ -78,23 +78,23 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]") {
         // Assuming that infinity is represented in some way, e.g., std::numeric_limits<double>::infinity()
         REQUIRE(prob.ub == std::vector<double>{INFINITY, INFINITY, INFINITY, INFINITY});
 
-        // Check x_base
-        REQUIRE(prob.x_base == std::vector<double>{0.0, 0.0, 0.0, 0.0});
+        // // Check x_base
+        // REQUIRE(prob.x_base == std::vector<double>{0.0, 0.0, 0.0, 0.0});
 
         // Check rhs_bar
         REQUIRE(prob.rhs_bar == std::vector<double>{12.0, 120.0});
 
-        // Check rhs_shift
-        REQUIRE(prob.rhs_shift == std::vector<double>{0.0, 0.0});
+        // // Check rhs_shift
+        // REQUIRE(prob.rhs_shift == std::vector<double>{0.0, 0.0});
 
         // Check cost
         REQUIRE(prob.cost == std::vector<double>{10.0, 7.0, 16.0, 6.0});
 
-        // Check cost_shift
-        REQUIRE(prob.cost_shift == 0.0);
+        // // Check cost_shift
+        // REQUIRE(prob.cost_shift == 0.0);
 
-        // Check solver
-        REQUIRE(prob.solver == nullptr);
+        // // Check solver
+        // REQUIRE(prob.solver == nullptr);
     }
 
     // stage 1 problem
@@ -202,24 +202,24 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]") {
         // Assuming that infinity is represented in some way, e.g., std::numeric_limits<double>::infinity()
         CHECK(prob.ub == std::vector<double>(12, INFINITY));
 
-        // Check x_base
-        CHECK(prob.x_base == std::vector<double>(12, 0.0));
+        // // Check x_base
+        // CHECK(prob.x_base == std::vector<double>(12, 0.0));
 
         // Check rhs_bar
         CHECK(prob.rhs_bar == std::vector<double>{0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 2.0});
 
-        // Check rhs_shift
-        CHECK(prob.rhs_shift == std::vector<double>(7, 0.0));
+        // // Check rhs_shift
+        // CHECK(prob.rhs_shift == std::vector<double>(7, 0.0));
 
         // Check cost
         CHECK(prob.cost == std::vector<double>{
                                40.0, 45.0, 32.0, 55.0, 24.0, 27.0, 19.2, 33.0, 4.0, 4.5, 3.2, 5.5});
 
-        // Check cost_shift
-        CHECK(prob.cost_shift == 0.0);
+        // // Check cost_shift
+        // CHECK(prob.cost_shift == 0.0);
 
-        // Check solver
-        CHECK(prob.solver == nullptr);
+        // // Check solver
+        // CHECK(prob.solver == nullptr);
     }
 }
 
