@@ -95,7 +95,7 @@ Solver Solver::from_template(StageProblem &stage_problem)
     return Solver(env, model);
 }
 
-void Solver::write_model(const char *filename)
+void Solver::write_model(const char *filename) const
 {
     if (env == nullptr)
     {
@@ -112,6 +112,34 @@ void Solver::write_model(const char *filename)
     {
         throw std::runtime_error("Solver::write_model: error writing model");
     }
+}
+
+void Solver::set_rhs(const std::vector<double> &rhs)
+{
+    int error = GRBsetdblattrarray(model, "RHS", 0, rhs.size(), const_cast<double *>(rhs.data()));
+    if (error)
+    {
+        throw std::runtime_error("Solver::change_rhs: error changing RHS.");
+    }
+
+    error = GRBupdatemodel(model);
+    if (error)
+    {
+        throw std::runtime_error("Solver::change_rhs: error updating model.");
+    }
+}
+
+std::vector<double> Solver::get_rhs() const
+{
+    int       numconstrs;
+    // Get the number of constraints
+    GRBgetintattr(model, "NumConstrs", &numconstrs);
+
+    std::vector<double> rhs(numconstrs);
+    // Get the RHS values for all constraints
+    GRBgetdblattrarray(model, "RHS", 0, numconstrs, rhs.data());
+
+    return rhs;
 }
 
 Solver::~Solver()

@@ -40,7 +40,7 @@ public:
                                                              stage_stoc_pattern(stage_stoc_pattern_),
                                                              // private member initializers
                                                              shift_x_base(false),
-                                                             x_base(nvars_current_, 0.0),  // set zero for shifts
+                                                             x_base(nvars_current_, 0.0), // set zero for shifts
                                                              rhs_shift(nrows_, 0.0),
                                                              cost_shift(0.0),
                                                              solver(nullptr)
@@ -56,50 +56,62 @@ public:
     // length of last stage variables (columns)
     // in this representation, we assume that the column numbers are integers and consecutive
     // the last stage variables comes first, then the current stage variables
-    const size_t nvars_last;
+    size_t nvars_last;
 
     // length of current stage variables
-    const size_t nvars_current;
+    size_t nvars_current;
 
     // length of current stage constraints, excluding the number of bounds
-    const size_t nrows;
+    size_t nrows;
 
     // names of last stage variables
-    const std::vector<std::string> last_stage_var_names;
+    std::vector<std::string> last_stage_var_names;
 
     // names of current stage variables
-    const std::vector<std::string> current_stage_var_names;
+    std::vector<std::string> current_stage_var_names;
 
     // names of current stage constraints
-    const std::vector<std::string> current_stage_row_names;
+    std::vector<std::string> current_stage_row_names;
 
     // LP coefficients
     // transfer_block: (nrows, nvars_last) matrix
     // current_block: (nrows, nvars_current) matrix
-    const SparseMatrix<double> transfer_block, current_block;
+    SparseMatrix<double> transfer_block, current_block;
 
     // lb, ub: lower/upper bound of the current stage variables
     // (nvars_current, )
-    const std::vector<double> lb, ub;
+    std::vector<double> lb, ub;
 
     // rhs as in the template
     // fixed part of the rhs
-    const std::vector<double> rhs_bar;
+    std::vector<double> rhs_bar;
 
     // directions of inequalities in current stage
     // should be one of G, L, E
     // (nrows, )
-    const std::vector<char> inequality_directions;
+    std::vector<char> inequality_directions;
 
     // cost coefficients of current stage
     // (nvars_current, )
-    const std::vector<double> cost_coefficients;
+    std::vector<double> cost_coefficients;
 
     // position of random elements in the transfer block or RHS
-    const StageStochasticPattern stage_stoc_pattern;
+    StageStochasticPattern stage_stoc_pattern;
 
     // destructor
     ~StageProblem();
+
+    // initialize the solver with the current problem template
+    void attach_solver();
+
+    // set the rhs of the solver
+    // to the rhs_bar - transfer * z_value - rhs_shift + (dr(omega) - dT(omega) * z)
+    // omega should only have the portion of randomness in the current stage
+    void apply_scenario_rhs(const std::vector<double> &z_value, const std::vector<double> scenario_omega);
+
+#ifdef UNIT_TEST
+    Solver* get_solver() { return solver.get(); }
+#endif  // UNIT_TEST
 
     private:
     // if shift_x_base is true,
@@ -122,6 +134,7 @@ public:
 
     // the pointer to the solver environment
     std::unique_ptr<Solver> solver;
+
 };
 
 #endif // PROB_H

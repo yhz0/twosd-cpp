@@ -221,7 +221,32 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]") {
         // // Check solver
         // CHECK(prob.solver == nullptr);
     }
+
+    // test changing scenario in stage 1
+    SECTION("smps_test stage 1 scenario") {
+        StageProblem prob = StageProblem::from_smps(cor, tim, sto, 1);
+
+        prob.attach_solver();
+
+        // construct a scenario and previous stage input
+        std::vector<double> scenario_omega = {123.4},
+                            prev_stage_input = {1.0, 2.0, 3.0, 4.0};
+
+        // change the scenario
+        prob.apply_scenario_rhs(prev_stage_input, scenario_omega);
+
+        // expected: [1 2 3 4 123.4 3 2]
+        std::vector<double> current_rhs = prob.get_solver() -> get_rhs(),
+                            expected_rhs = {1.0, 2.0, 3.0, 4.0, 123.4, 3.0, 2.0};
+
+        REQUIRE(current_rhs.size() == expected_rhs.size());
+        for (size_t i = 0; i < current_rhs.size(); ++i) {
+            CHECK(current_rhs[i] == Approx(expected_rhs[i]));
+        }
+    }
 }
+    
+    
 
 TEST_CASE("SMPS integrated test on lgsc instance", "[StageProblem]") {
     smps::SMPSCore cor("tests/lgsc/lgsc.cor");

@@ -1,7 +1,8 @@
 #include <iostream>
 
-#include "include/smps.h"
-#include "include/prob.h"
+#include "smps.h"
+#include "prob.h"
+#include "solver.h"
 
 int main() {
     // 1. load the problem
@@ -16,7 +17,6 @@ int main() {
     
     // 2.2 set up first stage X's of appropriate size
     // std::vector<double> x_incumbent, x_candidate;
-    // resize(...)
 
     // 2.3 set up dual vertices set (shared)
     // DualVertexSet dv;

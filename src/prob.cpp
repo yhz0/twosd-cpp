@@ -129,3 +129,45 @@ StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPS
 StageProblem::~StageProblem()
 {
 }
+
+void StageProblem::attach_solver()
+{
+    Solver solver_instance = Solver::from_template(*this);
+    solver = std::make_unique<Solver>(std::move(solver_instance));
+}
+
+void StageProblem::apply_scenario_rhs(const std::vector<double> &z_value, const std::vector<double> scenario_omega)
+{
+    // new_rhs = rhs_bar - transfer * z_value - rhs_shift + (dr(omega) - dT(omega) * z)
+    std::vector<double> new_rhs(rhs_bar);
+
+    // Apply transfer block
+    if (transfer_block.nnz() > 0)
+        transfer_block.subtract_multiply_with_vector(z_value, new_rhs);
+
+    // Apply RHS shift
+    if (shift_x_base)
+        for (size_t i = 0; i < rhs_shift.size(); ++i)
+            new_rhs[i] -= rhs_shift[i];
+    
+    // Apply stochastic pattern
+    for (size_t i = 0; i < stage_stoc_pattern.rv_count; ++i) {
+        int row = stage_stoc_pattern.row_index[i], col = stage_stoc_pattern.col_index[i];
+        double ref_value = stage_stoc_pattern.reference_values[i],
+               current_value = scenario_omega[i];
+
+        if (col == -1) {
+            // RHS
+            new_rhs[row] += current_value - ref_value;
+        } else if (row == -1) {
+            // cost
+            throw std::runtime_error("StageProblem::apply_scenario_rhs: randomness in cost is not supported");
+        } else {
+            // transfer block
+            new_rhs[row] -= (current_value - ref_value) * z_value[col];
+        }
+    }
+
+    // Set the new RHS
+    solver->set_rhs(new_rhs);
+}
