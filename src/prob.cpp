@@ -1,8 +1,46 @@
 #include "prob.h"
 #include "solver.h"
-#include <stdexcept>  // For std::runtime_error
+#include <stdexcept> // For std::runtime_error
 
-StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPSTime &tim, 
+StageProblem::StageProblem(size_t nvars_last_, size_t nvars_current_, size_t nrows_, const std::vector<std::string> &last_stage_var_names_, const std::vector<std::string> &current_stage_var_names_, const std::vector<std::string> &current_stage_row_names_, const SparseMatrix<double> &transfer_block_, const SparseMatrix<double> &current_block_, const std::vector<double> &lb_, const std::vector<double> &ub_, const std::vector<double> &rhs_bar_, const std::vector<char> &inequality_directions_, const std::vector<double> &cost_coefficients_, const StageStochasticPattern &stage_stoc_pattern_)
+    : nvars_last(nvars_last_), nvars_current(nvars_current_), nrows(nrows_),
+      last_stage_var_names(last_stage_var_names_), current_stage_var_names(current_stage_var_names_), current_stage_row_names(current_stage_row_names_),
+      transfer_block(transfer_block_), current_block(current_block_),
+      lb(lb_), ub(ub_), rhs_bar(rhs_bar_),
+      inequality_directions(inequality_directions_),
+      cost_coefficients(cost_coefficients_),
+      stage_stoc_pattern(stage_stoc_pattern_),
+      // private member initializers
+      shift_x_base(false),
+      x_base(nvars_current_, 0.0), // set zero for shifts
+      rhs_shift(nrows_, 0.0),
+      cost_shift(0.0),
+      has_non_trivial_bounds(false),
+      non_trivial_fx_index(),
+      non_trivial_lb_index(),
+      non_trivial_ub_index(),
+      solver(nullptr)
+{
+    // check if the problem has non-trivial bounds
+    for (size_t i = 0; i < nvars_current; ++i)
+    {
+        // fix bound if ub==lb and non zero
+        if (ub[i] == lb[i] && !approx_equal(lb[i], 0.0))
+            non_trivial_fx_index.push_back(i);
+
+        if (ub[i] != std::numeric_limits<double>::infinity() && !approx_equal(ub[i], 0.0))
+            non_trivial_ub_index.push_back(i);
+        else if (lb[i] != -std::numeric_limits<double>::infinity() && !approx_equal(lb[i], 0.0))
+            non_trivial_lb_index.push_back(i);
+    }
+
+    if (non_trivial_fx_index.size() + non_trivial_ub_index.size() + non_trivial_lb_index.size() > 0)
+    {
+        has_non_trivial_bounds = true;
+    }
+}
+
+StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPSTime &tim,
                                      const smps::SMPSStoch &sto, int stage)
 {
     size_t total_ncols = cor.num_cols, total_nrows = cor.num_rows;
@@ -24,15 +62,15 @@ StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPS
     lb.resize(nvars_current);
     ub.resize(nvars_current);
     cost.resize(nvars_current, 0.0);
-    x_base.resize(nvars_current, 0.0);  // Assuming x_base is zero for all current stage variables
+    x_base.resize(nvars_current, 0.0); // Assuming x_base is zero for all current stage variables
     rhs_bar.resize(nrows);
-    rhs_shift.resize(nrows, 0.0);  // Assuming rhs_shift is zero initially
+    rhs_shift.resize(nrows, 0.0); // Assuming rhs_shift is zero initially
     inequality_directions.resize(nrows);
 
     // Set matrix size
     transfer_block.resize(nrows, nvars_last);
     current_block.resize(nrows, nvars_current);
-    
+
     // Process columns
     for (size_t i = 0; i < total_ncols; ++i)
     {
@@ -149,20 +187,26 @@ void StageProblem::apply_scenario_rhs(const std::vector<double> &z_value, const 
     if (shift_x_base)
         for (size_t i = 0; i < rhs_shift.size(); ++i)
             new_rhs[i] -= rhs_shift[i];
-    
+
     // Apply stochastic pattern
-    for (size_t i = 0; i < stage_stoc_pattern.rv_count; ++i) {
+    for (size_t i = 0; i < stage_stoc_pattern.rv_count; ++i)
+    {
         int row = stage_stoc_pattern.row_index[i], col = stage_stoc_pattern.col_index[i];
         double ref_value = stage_stoc_pattern.reference_values[i],
                current_value = scenario_omega[i];
 
-        if (col == -1) {
+        if (col == -1)
+        {
             // RHS
             new_rhs[row] += current_value - ref_value;
-        } else if (row == -1) {
+        }
+        else if (row == -1)
+        {
             // cost
             throw std::runtime_error("StageProblem::apply_scenario_rhs: randomness in cost is not supported");
-        } else {
+        }
+        else
+        {
             // transfer block
             new_rhs[row] -= (current_value - ref_value) * z_value[col];
         }

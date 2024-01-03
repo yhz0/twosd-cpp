@@ -45,4 +45,8 @@ private:
     std::vector<std::string> index_to_name_vector;
 };
 
+
+// Approximate equality of floating point numbers.
+inline bool approx_equal(double a, double b, double epsilon = 1e-6) { return std::abs(a - b) < epsilon; }
+
 #endif // UTILS_H

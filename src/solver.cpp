@@ -131,7 +131,7 @@ void Solver::set_rhs(const std::vector<double> &rhs)
 
 std::vector<double> Solver::get_rhs() const
 {
-    int       numconstrs;
+    int numconstrs;
     // Get the number of constraints
     GRBgetintattr(model, "NumConstrs", &numconstrs);
 
@@ -140,6 +140,137 @@ std::vector<double> Solver::get_rhs() const
     GRBgetdblattrarray(model, "RHS", 0, numconstrs, rhs.data());
 
     return rhs;
+}
+
+void Solver::solve()
+{
+    int error;
+
+    // Optimize model
+    error = GRBoptimize(model);
+    if (error) { throw std::runtime_error("Solver::solve: error optimizing model"); }
+
+    // Set number of constraints and variables
+    GRBgetintattr(model, "NumConstrs", &num_constrs);
+    GRBgetintattr(model, "NumVars", &num_vars);
+}
+
+std::vector<double> Solver::get_primal_solution() const
+{
+    std::vector<double> solution(num_vars);
+    int error = GRBgetdblattrarray(model, "X", 0, num_vars, solution.data());
+    if (error)
+    {
+        throw std::runtime_error("Solver::get_primal_solution: error getting primal solution");
+    }
+    return solution;
+}
+
+std::vector<double> Solver::get_dual_solution() const
+{
+    std::vector<double> solution(num_constrs);
+    int error = GRBgetdblattrarray(model, "Pi", 0, num_constrs, solution.data());
+    if (error)
+    {
+        throw std::runtime_error("Solver::get_dual_solution: error getting dual solution");
+    }
+
+    return solution;
+}
+
+std::vector<double> Solver::get_dual_solution(const std::vector<int> &fx_index, const std::vector<int> &lb_index, const std::vector<int> &ub_index) const
+{
+    std::vector<double> solution(num_constrs + fx_index.size() + lb_index.size() + ub_index.size());
+
+    // constraint block duals
+    int error = GRBgetdblattrarray(model, "Pi", 0, num_constrs, solution.data());
+    if (error)
+    {
+        throw std::runtime_error("Solver::get_dual_solution: error getting dual solution");
+    }
+
+    // the position of the variable RC
+    int offset = num_constrs;
+
+    // fixed variables duals
+    for (size_t i = 0; i < fx_index.size(); ++i)
+    {
+        error = GRBgetdblattrelement(model, "RC", fx_index[i], &solution[offset + i]);
+        if (error)
+        {
+            throw std::runtime_error("Solver::get_dual_solution: error getting RC for fixed variables");
+        }
+    }
+
+    offset += fx_index.size();
+
+    // lb duals
+    for(size_t i = 0; i < lb_index.size(); ++i)
+    {
+        double x, lb;
+        // query X and lower bound to check if the bound is achieved
+        error = GRBgetdblattrelement(model, "X", lb_index[i], &x);
+        if (error)
+        {
+            throw std::runtime_error("Solver::get_dual_solution: error getting X for lb");
+        }
+
+        // get lower bound value
+        error = GRBgetdblattrelement(model, "LB", lb_index[i], &lb);
+
+        if (error) {
+            throw std::runtime_error("Solver::get_dual_solution: error getting LB for lb");
+        }
+
+        if (approx_equal(x, lb))
+        {
+            error = GRBgetdblattrelement(model, "RC", lb_index[i], &solution[offset + i]);
+            if (error)
+            {
+                throw std::runtime_error("Solver::get_dual_solution: error getting RC for lb");
+            }
+        }
+        else
+        {
+            solution[offset + i] = 0.0;
+        }
+    }
+
+    offset += lb_index.size();
+
+    // ub duals
+    for(size_t i = 0; i < ub_index.size(); ++i)
+    {
+        double x, ub;
+        // query X and upper bound to check if the bound is achieved
+        error = GRBgetdblattrelement(model, "X", ub_index[i], &x);
+        if (error)
+        {
+            throw std::runtime_error("Solver::get_dual_solution: error getting X for ub");
+        }
+
+        // get upper bound value
+        error = GRBgetdblattrelement(model, "UB", ub_index[i], &ub);
+
+        if (error) {
+            throw std::runtime_error("Solver::get_dual_solution: error getting UB for ub");
+        }
+
+        if (approx_equal(x, ub))
+        {
+            error = GRBgetdblattrelement(model, "RC", ub_index[i], &solution[offset + i]);
+            if (error)
+            {
+                throw std::runtime_error("Solver::get_dual_solution: error getting RC for ub");
+            }
+        }
+        else
+        {
+            solution[offset + i] = 0.0;
+        }
+    }
+
+    return solution;
 }
 
 Solver::~Solver()

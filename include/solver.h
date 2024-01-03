@@ -37,12 +37,30 @@ class Solver
     // get the full RHS
     std::vector<double> get_rhs() const;
 
+    // solve the model
+    void solve();
+
+    // get primal solution
+    std::vector<double> get_primal_solution() const;
+
+    // get dual solution
+    std::vector<double> get_dual_solution() const;
+
+    // get dual solution with specified non-trivial bound constraints.
+    std::vector<double> get_dual_solution(const std::vector<int> &fx_index, const std::vector<int> &lb_index, const std::vector<int> &ub_index) const;
+
     // destructor frees model and environment if not null
     ~Solver();
 
     private:
     GRBenv *env;
     GRBmodel *model;
+    
+    // number of variables
+    int num_vars;
+
+    // number of constraints
+    int num_constrs;
 };
 
 #endif  // SOLVER_H
