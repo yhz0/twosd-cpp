@@ -98,3 +98,66 @@ TEST_CASE("VectorContainer Synchronization Tracking", "[VectorContainer]") {
         CHECK(vc.get_current_position() == 2);
     }
 }
+
+TEST_CASE("UniqueVectorContainer Insertion and Uniqueness", "[UniqueVectorContainer]") {
+
+    SECTION("Unique Insertions") {
+        UniqueVectorContainer uvc(3, 3); // Container for 3 vectors, each of dimension 3
+        std::optional<size_t> pos;
+
+        // Insert (1.0, 2.0, 3.0)
+        pos = uvc.insert(std::vector<float>{1.0f, 2.0f, 3.0f});
+        REQUIRE(pos.has_value());
+        CHECK(pos.value() == 0);
+
+        // Insert (1.0, 2.0, 3.0) again, should return std::nullopt
+        pos = uvc.insert(std::vector<float>{1.0f, 2.0f, 3.0f});
+        CHECK_FALSE(pos.has_value());
+
+        // Insert (4.0, 5.0, 6.0)
+        pos = uvc.insert(std::vector<float>{4.0f, 5.0f, 6.0f});
+        REQUIRE(pos.has_value());
+        CHECK(pos.value() == 1);
+
+        // Insert (4.0, 6.0, 5.0)
+        pos = uvc.insert(std::vector<float>{4.0f, 6.0f, 5.0f});
+        REQUIRE(pos.has_value());
+        CHECK(pos.value() == 2);
+
+        // Check contents of container
+        CHECK(uvc.get(0) == std::vector<float>{1.0f, 2.0f, 3.0f});
+        CHECK(uvc.get(1) == std::vector<float>{4.0f, 5.0f, 6.0f});
+        CHECK(uvc.get(2) == std::vector<float>{4.0f, 6.0f, 5.0f});
+    }
+
+    SECTION("Handling Container Capacity and Wrap-Around") {
+        // Assuming container now contains (1 2 3), (4 5 6), (4 6 5)
+        UniqueVectorContainer uvc(3, 3); // Container for 3 vectors, each of dimension 3
+        uvc.insert(std::vector<float>{1.0f, 2.0f, 3.0f});
+        uvc.insert(std::vector<float>{4.0f, 5.0f, 6.0f});
+        uvc.insert(std::vector<float>{4.0f, 6.0f, 5.0f});
+
+        // Insert (11, 12, 13), expect wrap-around and return 0
+        auto pos = uvc.insert(std::vector<float>{11.0f, 12.0f, 13.0f});
+        REQUIRE(pos.has_value());
+        CHECK(pos.value() == 0);
+
+        // Insert (1.0, 2.0, 3.0), should return 1
+        pos = uvc.insert(std::vector<float>{1.0f, 2.0f, 3.0f});
+        REQUIRE(pos.has_value());
+        CHECK(pos.value() == 1);
+
+        // Container should now contain (11 12 13), (1 2 3), (4 6 5)
+        CHECK(uvc.get(0) == std::vector<float>{11.0f, 12.0f, 13.0f});
+        CHECK(uvc.get(1) == std::vector<float>{1.0f, 2.0f, 3.0f});
+        CHECK(uvc.get(2) == std::vector<float>{4.0f, 6.0f, 5.0f});
+
+        // Insert (4 6 5), should return std::nullopt
+        pos = uvc.insert(std::vector<float>{4.0f, 6.0f, 5.0f});
+        CHECK_FALSE(pos.has_value());
+
+        // Insert (11 12 13), should also return std::nullopt
+        pos = uvc.insert(std::vector<float>{11.0f, 12.0f, 13.0f});
+        CHECK_FALSE(pos.has_value());
+    }
+}

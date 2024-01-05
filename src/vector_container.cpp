@@ -140,3 +140,78 @@ void VectorContainer::reset_sync_range() {
 size_t VectorContainer::calculate_padded_dim(size_t dim) const {
     return (dim + GROUP_SIZE - 1) / GROUP_SIZE * GROUP_SIZE;
 }
+
+std::optional<size_t> UniqueVectorContainer::insert(const std::vector<float> &vec)
+{
+    if (vec.size() != vector_dim) return std::nullopt;
+    // calculate the hash value
+    float hash_value = hash(vec);
+    
+    if (hashmap.find(hash_value) != hashmap.end())
+    {
+        std::vector<size_t> &indices = hashmap[hash_value];
+        for (size_t i = 0; i < indices.size(); ++i)
+        {
+            // if we find a vector that is the same as the input vector
+            // then dont insert it
+            if (approx_equal(vec, get(indices[i])))
+            {
+                return std::nullopt;
+            }
+        }
+    }
+
+    // if we reach here, then we need to insert the vector
+
+    // check if we need to overwrite the oldest vector,
+    // if overwriting, we should also remove the old index from the hashmap
+    if (current_size == max_vectors)
+    {
+        float oldest_hash = hash(get(current_position));
+        std::vector<size_t> &indices = hashmap[oldest_hash];
+        auto it = std::find(indices.begin(), indices.end(), current_position);
+        if (it != indices.end())
+        {
+            indices.erase(it);
+        }
+    }
+
+    // add the hash value to the hashmap
+    if (hashmap.find(hash_value) == hashmap.end())
+    {
+        hashmap[hash_value] = std::vector<size_t>();
+    }
+    hashmap[hash_value].push_back(current_position);
+
+    // store the vector
+    return VectorContainer::insert(vec);
+}
+
+std::optional<size_t> UniqueVectorContainer::insert(const std::vector<double> &vec) {
+    std::vector<float> temp(vec.begin(), vec.end());
+    return insert(temp);
+}
+
+std::optional<size_t> UniqueVectorContainer::insert(const double *vec)
+{
+    std::vector<float> temp(vec, vec + vector_dim);
+    return insert(temp);
+}
+
+float UniqueVectorContainer::hash(const std::vector<float> &vec)
+{
+    float hash = 0;
+    for (size_t i = 0; i < vec.size(); ++i)
+    {
+        hash += std::abs(vec[i]);
+    }
+    return hash;
+}
+
+bool UniqueVectorContainer::approx_equal(const std::vector<float> &v1, const std::vector<float> &v2)
+{
+    for(size_t i = 0; i < v1.size(); ++i)
+        if(std::abs(v1[i] - v2[i]) > TOLERANCE)
+            return false;
+    return true;
+}
