@@ -1,6 +1,7 @@
 #ifndef SPARSE_H
 #define SPARSE_H
 
+#include <cstddef>
 #include <vector>
 #include <tuple>
 
