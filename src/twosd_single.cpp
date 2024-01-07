@@ -18,12 +18,14 @@ nworkers(nworkers_)
 
     // construct stage problems
     prob0 = std::make_unique<StageProblem>(StageProblem::from_smps(cor, tim, sto, 0));
-    
+    prob0->attach_solver();
+
     // create a second stage problem, and copy it nworkers times
     StageProblem prob1_tmp = StageProblem::from_smps(cor, tim, sto, 1);
 
     for (int i = 0; i < nworkers; ++i) {
         prob1.push_back(std::make_unique<StageProblem>(prob1_tmp));
+        prob1[i]->attach_solver();
     }
 
 }
