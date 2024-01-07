@@ -27,6 +27,14 @@ public:
         const std::vector<double> &cost_coefficients_,
         const StageStochasticPattern &stage_stoc_pattern_);
 
+    // copy constructor
+    // will not copy the solver, instead, it will leave it as nullptr
+    StageProblem(const StageProblem& other);
+
+    // Declare the move constructor and move assignment operator
+    StageProblem(StageProblem&& other) noexcept;
+    StageProblem& operator=(StageProblem&& other) noexcept;
+
     // copy the lp coefficients from the core file and time file
     // and store the sparsity pattern in the sto file.
     // solver is not initialized
@@ -77,9 +85,6 @@ public:
 
     // position of random elements in the transfer block or RHS
     StageStochasticPattern stage_stoc_pattern;
-
-    // destructor
-    ~StageProblem();
 
     // initialize the solver with the current problem template
     void attach_solver();

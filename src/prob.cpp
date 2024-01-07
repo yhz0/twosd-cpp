@@ -40,6 +40,80 @@ StageProblem::StageProblem(size_t nvars_last_, size_t nvars_current_, size_t nro
     }
 }
 
+StageProblem::StageProblem(const StageProblem &other)
+    : nvars_last(other.nvars_last), nvars_current(other.nvars_current), nrows(other.nrows),
+      last_stage_var_names(other.last_stage_var_names), current_stage_var_names(other.current_stage_var_names), current_stage_row_names(other.current_stage_row_names),
+      transfer_block(other.transfer_block), current_block(other.current_block),
+      lb(other.lb), ub(other.ub), rhs_bar(other.rhs_bar),
+      inequality_directions(other.inequality_directions),
+      cost_coefficients(other.cost_coefficients),
+      stage_stoc_pattern(other.stage_stoc_pattern),
+      // private member initializers
+      shift_x_base(other.shift_x_base),
+      x_base(other.x_base),
+      rhs_shift(other.rhs_shift),
+      cost_shift(other.cost_shift),
+      has_non_trivial_bounds(other.has_non_trivial_bounds),
+      non_trivial_fx_index(other.non_trivial_fx_index),
+      non_trivial_lb_index(other.non_trivial_lb_index),
+      non_trivial_ub_index(other.non_trivial_ub_index),
+      solver(nullptr) // solver is not copied
+{
+}
+
+StageProblem::StageProblem(StageProblem &&other) noexcept
+    : nvars_last(other.nvars_last), nvars_current(other.nvars_current), nrows(other.nrows),
+      last_stage_var_names(std::move(other.last_stage_var_names)), current_stage_var_names(std::move(other.current_stage_var_names)), current_stage_row_names(std::move(other.current_stage_row_names)),
+      transfer_block(std::move(other.transfer_block)), current_block(std::move(other.current_block)),
+      lb(std::move(other.lb)), ub(std::move(other.ub)), rhs_bar(std::move(other.rhs_bar)),
+      inequality_directions(std::move(other.inequality_directions)),
+      cost_coefficients(std::move(other.cost_coefficients)),
+      stage_stoc_pattern(std::move(other.stage_stoc_pattern)),
+      // private member initializers
+      shift_x_base(other.shift_x_base),
+      x_base(std::move(other.x_base)),
+      rhs_shift(std::move(other.rhs_shift)),
+      cost_shift(other.cost_shift),
+      has_non_trivial_bounds(other.has_non_trivial_bounds),
+      non_trivial_fx_index(std::move(other.non_trivial_fx_index)),
+      non_trivial_lb_index(std::move(other.non_trivial_lb_index)),
+      non_trivial_ub_index(std::move(other.non_trivial_ub_index)),
+      solver(std::move(other.solver))
+{
+}
+
+StageProblem &StageProblem::operator=(StageProblem &&other) noexcept
+{
+    if (this != &other)
+    {
+        nvars_last = other.nvars_last;
+        nvars_current = other.nvars_current;
+        nrows = other.nrows;
+        last_stage_var_names = std::move(other.last_stage_var_names);
+        current_stage_var_names = std::move(other.current_stage_var_names);
+        current_stage_row_names = std::move(other.current_stage_row_names);
+        transfer_block = std::move(other.transfer_block);
+        current_block = std::move(other.current_block);
+        lb = std::move(other.lb);
+        ub = std::move(other.ub);
+        rhs_bar = std::move(other.rhs_bar);
+        inequality_directions = std::move(other.inequality_directions);
+        cost_coefficients = std::move(other.cost_coefficients);
+        stage_stoc_pattern = std::move(other.stage_stoc_pattern);
+        // private member initializers
+        shift_x_base = other.shift_x_base;
+        x_base = std::move(other.x_base);
+        rhs_shift = std::move(other.rhs_shift);
+        cost_shift = other.cost_shift;
+        has_non_trivial_bounds = other.has_non_trivial_bounds;
+        non_trivial_fx_index = std::move(other.non_trivial_fx_index);
+        non_trivial_lb_index = std::move(other.non_trivial_lb_index);
+        non_trivial_ub_index = std::move(other.non_trivial_ub_index);
+        solver = std::move(other.solver);
+    }
+    return *this;
+}
+
 StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPSTime &tim,
                                      const smps::SMPSStoch &sto, int stage)
 {
@@ -162,10 +236,6 @@ StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPS
     return StageProblem(nvars_last, nvars_current, nrows, last_stage_var_names, current_stage_var_names,
                         current_stage_row_names, transfer_block, current_block, lb, ub, rhs_bar,
                         inequality_directions, cost, stage_stoc_pattern);
-}
-
-StageProblem::~StageProblem()
-{
 }
 
 void StageProblem::attach_solver()
