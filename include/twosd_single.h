@@ -9,7 +9,6 @@
 
 #include "smps.h"
 #include "prob.h"
-#include "solver.h"
 
 class TwoSDSingle {
 public:

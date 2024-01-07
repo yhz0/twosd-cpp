@@ -2,7 +2,6 @@
 #include "../external/catch_amalgamated.hpp"
 #include "smps.h"
 #include "prob.h"
-#include "solver.h"
 #include <random>
 
 using Catch::Approx;
@@ -236,13 +235,14 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]") {
         prob.apply_scenario_rhs(prev_stage_input, scenario_omega);
 
         // expected: [1 2 3 4 123.4 3 2]
-        std::vector<double> current_rhs = prob.get_solver() -> get_rhs(),
-                            expected_rhs = {1.0, 2.0, 3.0, 4.0, 123.4, 3.0, 2.0};
+        std::vector<double> expected_rhs = {1.0, 2.0, 3.0, 4.0, 123.4, 3.0, 2.0};
 
-        REQUIRE(current_rhs.size() == expected_rhs.size());
-        for (size_t i = 0; i < current_rhs.size(); ++i) {
-            CHECK(current_rhs[i] == Approx(expected_rhs[i]));
-        }
+        // call gurobi to get the rhs
+        std::vector<double> current_rhs(expected_rhs.size());
+        GRBgetdblattrarray(prob.get_model(), GRB_DBL_ATTR_RHS, 0, expected_rhs.size(), current_rhs.data());
+
+        // compare
+        CHECK(current_rhs == expected_rhs);
     }
 }
     

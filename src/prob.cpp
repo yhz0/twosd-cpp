@@ -1,6 +1,9 @@
 #include "prob.h"
-#include "solver.h"
 #include <stdexcept> // For std::runtime_error
+
+#if UNIT_TEST
+#include <iostream>
+#endif
 
 StageProblem::StageProblem(size_t nvars_last_, size_t nvars_current_, size_t nrows_, const std::vector<std::string> &last_stage_var_names_, const std::vector<std::string> &current_stage_var_names_, const std::vector<std::string> &current_stage_row_names_, const SparseMatrix<double> &transfer_block_, const SparseMatrix<double> &current_block_, const std::vector<double> &lb_, const std::vector<double> &ub_, const std::vector<double> &rhs_bar_, const std::vector<char> &inequality_directions_, const std::vector<double> &cost_coefficients_, const StageStochasticPattern &stage_stoc_pattern_)
     : nvars_last(nvars_last_), nvars_current(nvars_current_), nrows(nrows_),
@@ -19,7 +22,8 @@ StageProblem::StageProblem(size_t nvars_last_, size_t nvars_current_, size_t nro
       non_trivial_fx_index(),
       non_trivial_lb_index(),
       non_trivial_ub_index(),
-      solver(nullptr)
+      env(nullptr),
+      model(nullptr)
 {
     // check if the problem has non-trivial bounds
     for (size_t i = 0; i < nvars_current; ++i)
@@ -57,7 +61,7 @@ StageProblem::StageProblem(const StageProblem &other)
       non_trivial_fx_index(other.non_trivial_fx_index),
       non_trivial_lb_index(other.non_trivial_lb_index),
       non_trivial_ub_index(other.non_trivial_ub_index),
-      solver(nullptr) // solver is not copied
+      env(nullptr), model(nullptr) // solver is not copied
 {
 }
 
@@ -78,8 +82,10 @@ StageProblem::StageProblem(StageProblem &&other) noexcept
       non_trivial_fx_index(std::move(other.non_trivial_fx_index)),
       non_trivial_lb_index(std::move(other.non_trivial_lb_index)),
       non_trivial_ub_index(std::move(other.non_trivial_ub_index)),
-      solver(std::move(other.solver))
+      env(other.env), model(other.model) // solver is moved
 {
+    other.env = nullptr;
+    other.model = nullptr;
 }
 
 StageProblem &StageProblem::operator=(StageProblem &&other) noexcept
@@ -109,7 +115,12 @@ StageProblem &StageProblem::operator=(StageProblem &&other) noexcept
         non_trivial_fx_index = std::move(other.non_trivial_fx_index);
         non_trivial_lb_index = std::move(other.non_trivial_lb_index);
         non_trivial_ub_index = std::move(other.non_trivial_ub_index);
-        solver = std::move(other.solver);
+        
+        // Move the solver
+        env = other.env;
+        model = other.model;
+        other.env = nullptr;
+        other.model = nullptr;
     }
     return *this;
 }
@@ -240,8 +251,89 @@ StageProblem StageProblem::from_smps(const smps::SMPSCore &cor, const smps::SMPS
 
 void StageProblem::attach_solver()
 {
-    Solver solver_instance = Solver::from_template(*this);
-    solver = std::make_unique<Solver>(std::move(solver_instance));
+    int error = 0;
+    if (env == nullptr)
+    {
+        error = GRBloadenv(&env, nullptr);
+        if (error)
+        {
+            throw std::runtime_error("StageProblem::attach_solver: error creating environment");
+        }
+    }
+
+    // empty model if not null
+    if (model != nullptr)
+        GRBfreemodel(model);
+    
+    // Create model
+    error = GRBnewmodel(env, &model,
+                        "",
+                        nvars_current,
+                        cost_coefficients.data(),
+                        lb.data(),
+                        ub.data(),
+                        nullptr,
+                        nullptr);
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::attach_solver: error creating model");
+    }
+
+    // Add constraints block
+    SparseMatrixCSR A(current_block);
+    std::vector<int> cbeg(A.getRowBegin()),
+        cind(A.getColumnIndex());
+    std::vector<double> cval(A.getValues());
+
+    // generate sense that is compatible with gurobi
+    std::vector<char> sense;
+    sense.resize(nrows);
+    for (size_t i = 0; i < nrows; ++i)
+    {
+        if (inequality_directions[i] == 'L')
+            sense[i] = GRB_LESS_EQUAL;
+        else if (inequality_directions[i] == 'G')
+            sense[i] = GRB_GREATER_EQUAL;
+        else if (inequality_directions[i] == 'E')
+            sense[i] = GRB_EQUAL;
+        else
+            throw std::runtime_error("StageProblem::attach_solver: invalid inequality direction");
+    }
+
+    error = GRBaddconstrs(model, nrows,
+                          current_block.nnz(),
+                          cbeg.data(), cind.data(), cval.data(),
+                          sense.data(),
+                          rhs_bar.data(),
+                          nullptr);
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::attach_solver: error adding constraints");
+    }
+
+    // set constraint names
+    for(size_t i = 0; i < nrows; ++i){
+        error = GRBsetstrattrelement(model, "ConstrName", i, current_stage_row_names[i].c_str());
+        if (error)
+        {
+            throw std::runtime_error("StageProblem::attach_solver: error setting constraint name");
+        }
+    }
+
+    // set variable names
+    for(size_t i = 0; i < nvars_current; ++i){
+        error = GRBsetstrattrelement(model, "VarName", i, current_stage_var_names[i].c_str());
+        if (error)
+        {
+            throw std::runtime_error("StageProblem::attach_solver: error setting variable name");
+        }
+    }
+
+    error = GRBupdatemodel(model);
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::attach_solver: error updating model");
+    }
 }
 
 void StageProblem::apply_scenario_rhs(const std::vector<double> &z_value, const std::vector<double> scenario_omega)
@@ -283,5 +375,22 @@ void StageProblem::apply_scenario_rhs(const std::vector<double> &z_value, const 
     }
 
     // Set the new RHS
-    solver->set_rhs(new_rhs);
+    int error = GRBsetdblattrarray(model, GRB_DBL_ATTR_RHS, 0, nrows, new_rhs.data());
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::apply_scenario_rhs: error setting RHS");
+    }
+    error = GRBupdatemodel(model);
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::apply_scenario_rhs: error updating model");
+    }
+}
+
+StageProblem::~StageProblem()
+{
+    if (model != nullptr)
+        GRBfreemodel(model);
+    if (env != nullptr)
+        GRBfreeenv(env);
 }

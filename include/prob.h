@@ -4,7 +4,7 @@
 #include "smps.h"
 #include "pattern.h"    // for StageStochasticPattern
 #include "utils.h"  // for approx_equal
-#include <memory>   // for std::unique_ptr
+#include "gurobi_c.h"
 
 class Solver;
 
@@ -28,7 +28,7 @@ public:
         const StageStochasticPattern &stage_stoc_pattern_);
 
     // copy constructor
-    // will not copy the solver, instead, it will leave it as nullptr
+    // will not copy the solver
     StageProblem(const StageProblem& other);
 
     // Declare the move constructor and move assignment operator
@@ -94,8 +94,12 @@ public:
     // omega should only have the portion of randomness in the current stage
     void apply_scenario_rhs(const std::vector<double> &z_value, const std::vector<double> scenario_omega);
 
+    ~StageProblem();
+
 #ifdef UNIT_TEST
-    Solver* get_solver() { return solver.get(); }
+    // for unit test, expose the gurobi environment and model
+    GRBenv* get_env() const { return env; }
+    GRBmodel* get_model() const { return model; }
 #endif  // UNIT_TEST
 
     private:
@@ -124,7 +128,8 @@ public:
     std::vector<int> non_trivial_fx_index, non_trivial_lb_index, non_trivial_ub_index;
 
     // the pointer to the solver environment
-    std::unique_ptr<Solver> solver;
+    GRBenv *env;
+    GRBmodel *model;
 
 };
 
