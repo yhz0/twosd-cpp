@@ -336,7 +336,7 @@ void StageProblem::attach_solver()
     }
 }
 
-void StageProblem::apply_scenario_rhs(const std::vector<double> &z_value, const std::vector<double> scenario_omega)
+void StageProblem::apply_scenario_rhs(const std::vector<double> &z_value, const std::vector<double> &scenario_omega)
 {
     // new_rhs = rhs_bar - transfer * z_value - rhs_shift + (dr(omega) - dT(omega) * z)
     std::vector<double> new_rhs(rhs_bar);
@@ -387,10 +387,85 @@ void StageProblem::apply_scenario_rhs(const std::vector<double> &z_value, const 
     }
 }
 
+void StageProblem::apply_root_stage_rhs()
+{
+    // new_rhs = rhs_bar - rhs_shift
+    std::vector<double> new_rhs(rhs_bar);
+
+    if (shift_x_base)
+        for (size_t i = 0; i < rhs_shift.size(); ++i)
+            new_rhs[i] -= rhs_shift[i];
+    
+    // Set the new RHS
+    int error = GRBsetdblattrarray(model, GRB_DBL_ATTR_RHS, 0, nrows, new_rhs.data());
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::apply_root_stage_rhs: error setting RHS");
+    }
+    error = GRBupdatemodel(model);
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::apply_root_stage_rhs: error updating model");
+    }
+}
+
+void StageProblem::set_x_base(const std::vector<double> &x_base_)
+{
+    if (x_base_.size() != nvars_current)
+    {
+        throw std::runtime_error("StageProblem::set_x_base: x_base_ has wrong size");
+    }
+    x_base = x_base_;
+    shift_x_base = true;
+
+    // update rhs_shift and cost_shift
+    update_rhs_shift();
+    update_cost_shift();
+}
+
+void StageProblem::unset_x_base()
+{
+    shift_x_base = false;
+
+    // update rhs_shift and cost_shift, this will set them to zero
+    update_rhs_shift();
+    update_cost_shift();
+}
+
+double StageProblem::get_cost_shift() const
+{
+    if (shift_x_base)
+        return cost_shift;
+    else
+        return 0.0;
+}
+
 StageProblem::~StageProblem()
 {
     if (model != nullptr)
         GRBfreemodel(model);
     if (env != nullptr)
         GRBfreeenv(env);
+}
+
+void StageProblem::update_rhs_shift()
+{
+    // zero rhs_shift
+    std::fill(rhs_shift.begin(), rhs_shift.end(), 0.0);
+    if (!shift_x_base)
+        return;
+    // then add current_block * x_base
+    current_block.multiply_with_vector(x_base, rhs_shift);
+}
+
+void StageProblem::update_cost_shift()
+{
+    cost_shift = 0.0;
+    if (!shift_x_base)
+        return;
+    // set cost_shift to c*x_base
+    for (size_t i = 0; i < nvars_current; ++i)
+    {
+        cost_shift += cost_coefficients[i] * x_base[i];
+    }
 }

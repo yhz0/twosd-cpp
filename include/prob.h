@@ -92,7 +92,20 @@ public:
     // set the rhs of the solver
     // to the rhs_bar - transfer * z_value - rhs_shift + (dr(omega) - dT(omega) * z)
     // omega should only have the portion of randomness in the current stage
-    void apply_scenario_rhs(const std::vector<double> &z_value, const std::vector<double> scenario_omega);
+    void apply_scenario_rhs(const std::vector<double> &z_value, const std::vector<double> &scenario_omega);
+
+    // set the rhs of the solver for root stage problem
+    // i.e. rhs_bar - rhs_shift
+    void apply_root_stage_rhs();
+
+    // set x_base to the specified value and update cost_shift and rhs_shift
+    void set_x_base(const std::vector<double> &x_base_);
+
+    // unset x_base and update cost_shift and rhs_shift
+    void unset_x_base();
+
+    // return the cost shift
+    double get_cost_shift() const;
 
     ~StageProblem();
 
@@ -126,6 +139,16 @@ public:
 
     // the index of non-trivial bound variables
     std::vector<int> non_trivial_fx_index, non_trivial_lb_index, non_trivial_ub_index;
+
+    // update the rhs shift
+    // if x_base is set, set rhs_shift to A*x_base
+    // otherwise, set rhs_shift to zero vector
+    void update_rhs_shift();
+
+    // update the cost shift
+    // if x_base is set, set cost_shift to c*x_base
+    // otherwise, set cost_shift to 0
+    void update_cost_shift();
 
     // the pointer to the solver environment
     GRBenv *env;

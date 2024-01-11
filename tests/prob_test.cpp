@@ -6,13 +6,15 @@
 
 using Catch::Approx;
 
-TEST_CASE("Test Setup for Problem", "[StageProblem]") {
+TEST_CASE("Test Setup for Problem", "[StageProblem]")
+{
     smps::SMPSCore cor("tests/lands/lands.cor");
     smps::SMPSImplicitTime tim("tests/lands/lands.tim");
     smps::SMPSStoch sto("tests/lands/lands.sto");
 
     // root stage problem
-    SECTION("from_smps test stage 0") {
+    SECTION("from_smps test stage 0")
+    {
         StageProblem prob = StageProblem::from_smps(cor, tim, sto, 0);
 
         // root stage:
@@ -62,12 +64,12 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]") {
         // Check current block
         REQUIRE(prob.current_block.nnz() == 8);
         CHECK(prob.current_block.get_element(0, 0) == 1.0);  // S1C1 X1
-        CHECK(prob.current_block.get_element(0, 1) == 1.0); // S1C1 X2
+        CHECK(prob.current_block.get_element(0, 1) == 1.0);  // S1C1 X2
         CHECK(prob.current_block.get_element(0, 2) == 1.0);  // S1C1 X3
         CHECK(prob.current_block.get_element(0, 3) == 1.0);  // S1C1 X4
-        CHECK(prob.current_block.get_element(1, 0) == 10.0);  // S1C2 X1
-        CHECK(prob.current_block.get_element(1, 1) == 7.0); // S1C2 X2
-        CHECK(prob.current_block.get_element(1, 2) == 16.0);  // S1C2 X3
+        CHECK(prob.current_block.get_element(1, 0) == 10.0); // S1C2 X1
+        CHECK(prob.current_block.get_element(1, 1) == 7.0);  // S1C2 X2
+        CHECK(prob.current_block.get_element(1, 2) == 16.0); // S1C2 X3
         CHECK(prob.current_block.get_element(1, 3) == 6.0);  // S1C2 X4
 
         // Check lower bounds
@@ -97,7 +99,8 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]") {
     }
 
     // stage 1 problem
-    SECTION("smps_test stage 1") {
+    SECTION("smps_test stage 1")
+    {
         StageProblem prob = StageProblem::from_smps(cor, tim, sto, 1);
 
         // last stage vars: X1 X2 X3 X4
@@ -212,17 +215,18 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]") {
 
         // Check cost
         CHECK(prob.cost_coefficients == std::vector<double>{
-                               40.0, 45.0, 32.0, 55.0, 24.0, 27.0, 19.2, 33.0, 4.0, 4.5, 3.2, 5.5});
+                                            40.0, 45.0, 32.0, 55.0, 24.0, 27.0, 19.2, 33.0, 4.0, 4.5, 3.2, 5.5});
 
-        // // Check cost_shift
-        // CHECK(prob.cost_shift == 0.0);
+        // Check cost_shift
+        CHECK(prob.get_cost_shift() == 0.0);
 
         // // Check solver
         // CHECK(prob.solver == nullptr);
     }
 
     // test changing scenario in stage 1
-    SECTION("smps_test stage 1 scenario") {
+    SECTION("smps_test stage 1 scenario")
+    {
         StageProblem prob = StageProblem::from_smps(cor, tim, sto, 1);
 
         prob.attach_solver();
@@ -244,11 +248,44 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]") {
         // compare
         CHECK(current_rhs == expected_rhs);
     }
-}
-    
-    
 
-TEST_CASE("SMPS integrated test on lgsc instance", "[StageProblem]") {
+    SECTION("set x_base")
+    {
+        StageProblem prob = StageProblem::from_smps(cor, tim, sto, 0);
+        prob.attach_solver();
+
+        // set x_base to [10 20 30 40] and apply rhs
+        prob.set_x_base({10.0, 20.0, 30.0, 40.0});
+        prob.apply_root_stage_rhs();
+
+        // expected cost shift = dot ([10 7 16 6], [10 20 30 40]) = 960
+        CHECK(prob.get_cost_shift() == 960.0);
+
+        // rhs_bar: [12,120]
+        // rhs_shift: [1 1 1 1; 10 7 16 6] * [10,20,30,40]
+        // expect new rhs is rhs_bar - rhs_shift = [-88, -840]
+
+        std::vector<double> expected_rhs = {-88.0, -840.0};
+        std::vector<double> current_rhs(expected_rhs.size());
+        GRBgetdblattrarray(prob.get_model(), GRB_DBL_ATTR_RHS, 0, expected_rhs.size(), current_rhs.data());
+        CHECK(current_rhs == expected_rhs);
+
+        // unset x_base and apply rhs
+        prob.unset_x_base();
+        prob.apply_root_stage_rhs();
+
+        // expect cost shift = 0
+        CHECK(prob.get_cost_shift() == 0.0);
+
+        // expect rhs to be [12,120]
+        expected_rhs = {12.0, 120.0};
+        GRBgetdblattrarray(prob.get_model(), GRB_DBL_ATTR_RHS, 0, expected_rhs.size(), current_rhs.data());
+        CHECK(current_rhs == expected_rhs);
+    }
+}
+
+TEST_CASE("SMPS integrated test on lgsc instance", "[StageProblem]")
+{
     smps::SMPSCore cor("tests/lgsc/lgsc.cor");
     smps::SMPSImplicitTime tim("tests/lgsc/lgsc.tim");
     smps::SMPSStoch sto("tests/lgsc/lgsc.sto");
@@ -289,8 +326,10 @@ TEST_CASE("SMPS integrated test on lgsc instance", "[StageProblem]") {
 
     // all in stage 1
     bool all_in_stage_1 = true;
-    for (size_t i = 0; i < patt.stage.size(); ++i) {
-        if (patt.stage[i] != 1) {
+    for (size_t i = 0; i < patt.stage.size(); ++i)
+    {
+        if (patt.stage[i] != 1)
+        {
             all_in_stage_1 = false;
             break;
         }
@@ -314,11 +353,13 @@ TEST_CASE("SMPS integrated test on lgsc instance", "[StageProblem]") {
     // its dimension should be the same as the number of RVs
     auto scenario = sto.generate_scenario(rng);
     CHECK(scenario.size() == 184);
-    
+
     // should contain elements from 5, 50, 100, 200, 500
     bool scenario_ok = true;
-    for (auto &x : scenario) {
-        if (x != 5.0 && x != 50.0 && x != 100.0 && x != 200.0 && x != 500.0) {
+    for (auto &x : scenario)
+    {
+        if (x != 5.0 && x != 50.0 && x != 100.0 && x != 200.0 && x != 500.0)
+        {
             scenario_ok = false;
             break;
         }
