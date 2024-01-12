@@ -87,7 +87,7 @@ public:
     StageStochasticPattern stage_stoc_pattern;
 
     // initialize the solver with the current problem template
-    void attach_solver();
+    virtual void attach_solver();
 
     // set the rhs of the solver
     // to the rhs_bar - transfer * z_value - rhs_shift + (dr(omega) - dT(omega) * z)
@@ -150,6 +150,7 @@ public:
     // otherwise, set cost_shift to 0
     void update_cost_shift();
 
+    protected:
     // the pointer to the solver environment
     GRBenv *env;
     GRBmodel *model;
