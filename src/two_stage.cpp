@@ -1,4 +1,5 @@
 #include "two_stage.h"
+#include "scs.h"
 #include <filesystem>
 
 namespace fs = std::filesystem;
@@ -28,4 +29,9 @@ nworkers(nworkers_)
         prob1[i]->attach_solver();
     }
 
+}
+
+void TwoStageSCS::solve()
+{
+    // TODO: implement
 }

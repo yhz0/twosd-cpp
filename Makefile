@@ -1,5 +1,5 @@
 CXX = g++  # or clang++
-CXXFLAGS = -std=c++17 -Wall -g -DUNIT_TEST
+CXXFLAGS = -std=c++17 -Wall -g -DUNIT_TEST -fopenmp
 
 # Solver related
 GUROBI_HOME = C:/soft/gurobi1100/win64

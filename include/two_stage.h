@@ -30,11 +30,12 @@ private:
     virtual void solve() = 0;
 };
 
+
 class TwoStageSCS : public TwoStageSP
 {
 public:
     using TwoStageSP::TwoStageSP;
-
+    void solve() override;
 };
 
 #endif // TWO_STAGE_H
