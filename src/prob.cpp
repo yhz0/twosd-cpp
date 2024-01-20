@@ -178,7 +178,7 @@ void StageProblem::attach_solver()
     }
 }
 
-void StageProblem::apply_scenario_rhs(const std::vector<double> &z_value, const std::vector<double> &scenario_omega)
+void StageProblem::update_solver_with_scenario(const std::vector<double> &z_value, const std::vector<double> &scenario_omega)
 {
     // new_rhs = rhs_bar - transfer * z_value - rhs_shift + (dr(omega) - dT(omega) * z)
     std::vector<double> new_rhs(rhs_bar);
@@ -207,7 +207,7 @@ void StageProblem::apply_scenario_rhs(const std::vector<double> &z_value, const 
         else if (row == -1)
         {
             // cost
-            throw std::runtime_error("StageProblem::apply_scenario_rhs: randomness in cost is not supported");
+            throw std::runtime_error("StageProblem::update_solver_with_scenario: randomness in cost is not supported");
         }
         else
         {
@@ -220,7 +220,7 @@ void StageProblem::apply_scenario_rhs(const std::vector<double> &z_value, const 
     int error = GRBsetdblattrarray(model, GRB_DBL_ATTR_RHS, 0, nrows, new_rhs.data());
     if (error)
     {
-        throw std::runtime_error("StageProblem::apply_scenario_rhs: error setting RHS");
+        throw std::runtime_error("StageProblem::update_solver_with_scenario: error setting RHS");
     }
 
     // update bounds if shifted
@@ -230,11 +230,11 @@ void StageProblem::apply_scenario_rhs(const std::vector<double> &z_value, const 
     error = GRBupdatemodel(model);
     if (error)
     {
-        throw std::runtime_error("StageProblem::apply_scenario_rhs: error updating model");
+        throw std::runtime_error("StageProblem::update_solver_with_scenario: error updating model");
     }
 }
 
-void StageProblem::apply_root_stage_rhs()
+void StageProblem::update_solver_root_stage()
 {
     // new_rhs = rhs_bar - rhs_shift
     std::vector<double> new_rhs(rhs_bar);
@@ -247,7 +247,7 @@ void StageProblem::apply_root_stage_rhs()
     int error = GRBsetdblattrarray(model, GRB_DBL_ATTR_RHS, 0, nrows, new_rhs.data());
     if (error)
     {
-        throw std::runtime_error("StageProblem::apply_root_stage_rhs: error setting RHS");
+        throw std::runtime_error("StageProblem::update_solver_root_stage: error setting RHS");
     }
 
     // update the bounds if shifted
@@ -257,7 +257,7 @@ void StageProblem::apply_root_stage_rhs()
     error = GRBupdatemodel(model);
     if (error)
     {
-        throw std::runtime_error("StageProblem::apply_root_stage_rhs: error updating model");
+        throw std::runtime_error("StageProblem::update_solver_root_stage: error updating model");
     }
 }
 

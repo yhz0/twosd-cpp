@@ -24,7 +24,7 @@ std::optional<std::vector<double>> StageProjectionProblem::solve(const std::vect
 
     // use set_x_base to set the base point
     set_x_base(x0);
-    apply_root_stage_rhs();
+    update_solver_root_stage();
 
     // call the solver
     int error = GRBoptimize(model);

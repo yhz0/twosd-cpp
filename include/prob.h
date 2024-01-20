@@ -71,14 +71,16 @@ public:
     // initialize the solver with the current problem template
     virtual void attach_solver();
 
-    // set the rhs of the solver
-    // to the rhs_bar - transfer * z_value - rhs_shift + (dr(omega) - dT(omega) * z)
+    // update the solver with the current problem template and the specified x_base
+    // change rhs to the rhs_bar - transfer * z_value - rhs_shift + (dr(omega) - dT(omega) * z)
+    // and bounds to the shifted bounds
     // omega should only have the portion of randomness in the current stage
-    void apply_scenario_rhs(const std::vector<double> &z_value, const std::vector<double> &scenario_omega);
+    void update_solver_with_scenario(const std::vector<double> &z_value, const std::vector<double> &scenario_omega);
 
-    // set the rhs of the solver for root stage problem
-    // i.e. rhs_bar - rhs_shift
-    void apply_root_stage_rhs();
+    // update the solver with the current problem template and the specified x_base
+    // change rhs to the rhs_bar - rhs_shift
+    // and bounds to the shifted bounds if necessary
+    void update_solver_root_stage();
 
     // set x_base to the specified value and update cost_shift and rhs_shift
     void set_x_base(const std::vector<double> &x_base_);
