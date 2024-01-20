@@ -6,26 +6,14 @@
 #include "utils.h"  // for approx_equal
 #include "gurobi_c.h"
 
-class Solver;
-
 class StageProblem
 {
 public:
-    StageProblem(
-        size_t nvars_last_,
-        size_t nvars_current_,
-        size_t nrows_,
-        const std::vector<std::string> &last_stage_var_names_,
-        const std::vector<std::string> &current_stage_var_names_,
-        const std::vector<std::string> &current_stage_row_names_,
-        const SparseMatrix<double> &transfer_block_,
-        const SparseMatrix<double> &current_block_,
-        const std::vector<double> &lb_,
-        const std::vector<double> &ub_,
-        const std::vector<double> &rhs_bar_,
-        const std::vector<char> &inequality_directions_,
-        const std::vector<double> &cost_coefficients_,
-        const StageStochasticPattern &stage_stoc_pattern_);
+    // copy the lp coefficients from the core file and time file
+    // and store the sparsity pattern in the sto file.
+    // solver is not initialized
+    StageProblem(const smps::SMPSCore &cor, const smps::SMPSTime &tim,
+                                  const smps::SMPSStoch &sto, int stage);
 
     // copy constructor
     // will not copy the solver
@@ -34,12 +22,6 @@ public:
     // Declare the move constructor and move assignment operator
     StageProblem(StageProblem&& other) noexcept;
     StageProblem& operator=(StageProblem&& other) noexcept;
-
-    // copy the lp coefficients from the core file and time file
-    // and store the sparsity pattern in the sto file.
-    // solver is not initialized
-    static StageProblem from_smps(const smps::SMPSCore &cor, const smps::SMPSTime &tim,
-                                  const smps::SMPSStoch &sto, int stage);
 
     // length of last stage variables (columns)
     // in this representation, we assume that the column numbers are integers and consecutive
@@ -107,6 +89,13 @@ public:
     // return the cost shift
     double get_cost_shift() const;
 
+    // add quadratic term to the objective, keeping the linear term
+    // the quadratic term is scale * x^2
+    void add_quadratic_term(double scale);
+
+    // remove all quadratic term, keeping the linear term
+    void remove_quadratic_term();
+
     ~StageProblem();
 
 #ifdef UNIT_TEST
@@ -150,7 +139,17 @@ public:
     // otherwise, set cost_shift to 0
     void update_cost_shift();
 
+    // update the bounds to the solver with the shifted bounds
+    void update_solver_bounds();
+
+    // read from smps files
+    void read_smps(const smps::SMPSCore &cor, const smps::SMPSTime &tim,
+                   const smps::SMPSStoch &sto, int stage);
+
     protected:
+
+    bool is_solver_attached() const;
+
     // the pointer to the solver environment
     GRBenv *env;
     GRBmodel *model;
