@@ -15,7 +15,7 @@ void StageProjectionProblem::attach_solver()
     add_quadratic_term(0.5);
 }
 
-std::optional<std::vector<double>> StageProjectionProblem::solve(const std::vector<double> &x0)
+std::optional<std::vector<double>> StageProjectionProblem::project(const std::vector<double> &x0)
 {
     if (is_feasible(x0))
     {
@@ -26,21 +26,7 @@ std::optional<std::vector<double>> StageProjectionProblem::solve(const std::vect
     set_x_base(x0);
     update_solver_root_stage();
 
-    // call the solver
-    int error = GRBoptimize(model);
-    if (error)
-    {
-        throw std::runtime_error("StageProjectionProblem::solve: Gurobi error code " + std::to_string(error) + " when optimizing.");
-    }
-
-    // get the solution
-    std::vector<double> solution(nvars_current, 0.0);
-    error = GRBgetdblattrarray(model, GRB_DBL_ATTR_X, 0, nvars_current, solution.data());
-
-    if (error)
-    {
-        throw std::runtime_error("StageProjectionProblem::solve: Gurobi error code " + std::to_string(error) + " when getting solution.");
-    }
+    std::vector<double> solution = solve_problem().solution;
 
     return std::make_optional(solution);
 }

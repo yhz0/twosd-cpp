@@ -15,7 +15,7 @@ class StageProjectionProblem: public StageProblem {
     // if the vector is already feasible, return nullopt
     // otherwise, return the difference between the projected vector and the given vector d
     // such that the projected vector is x0 + d
-    std::optional<std::vector<double>> solve(const std::vector<double> &x0);
+    std::optional<std::vector<double>> project(const std::vector<double> &x0);
 
     private:
     // remove linear terms from the objective
