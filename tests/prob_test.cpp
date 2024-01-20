@@ -13,9 +13,9 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]")
     smps::SMPSStoch sto("tests/lands/lands.sto");
 
     // root stage problem
-    SECTION("from_smps test stage 0")
+    SECTION("initialize stage 0")
     {
-        StageProblem prob = StageProblem::from_smps(cor, tim, sto, 0);
+        StageProblem prob(cor, tim, sto, 0);
 
         // root stage:
         // last stage vars: none
@@ -101,7 +101,7 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]")
     // stage 1 problem
     SECTION("smps_test stage 1")
     {
-        StageProblem prob = StageProblem::from_smps(cor, tim, sto, 1);
+        StageProblem prob(cor, tim, sto, 1);
 
         // last stage vars: X1 X2 X3 X4
         // current stage vars: Y11 Y21 Y31 Y41 Y12 Y22 Y32 Y42 Y13 Y23 Y33 Y43
@@ -218,7 +218,7 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]")
                                             40.0, 45.0, 32.0, 55.0, 24.0, 27.0, 19.2, 33.0, 4.0, 4.5, 3.2, 5.5});
 
         // Check cost_shift
-        CHECK(prob.get_cost_shift() == 0.0);
+        CHECK(prob.get_cost_shift() == Approx(0.0));
 
         // // Check solver
         // CHECK(prob.solver == nullptr);
@@ -227,7 +227,7 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]")
     // test changing scenario in stage 1
     SECTION("smps_test stage 1 scenario")
     {
-        StageProblem prob = StageProblem::from_smps(cor, tim, sto, 1);
+        StageProblem prob(cor, tim, sto, 1);
 
         prob.attach_solver();
 
@@ -251,7 +251,7 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]")
 
     SECTION("set x_base")
     {
-        StageProblem prob = StageProblem::from_smps(cor, tim, sto, 0);
+        StageProblem prob(cor, tim, sto, 0);
         prob.attach_solver();
 
         // set x_base to [10 20 30 40] and apply rhs
@@ -292,8 +292,8 @@ TEST_CASE("SMPS integrated test on lgsc instance", "[StageProblem]")
 
     std::mt19937 rng(0);
 
-    StageProblem prob0 = StageProblem::from_smps(cor, tim, sto, 0),
-                 prob1 = StageProblem::from_smps(cor, tim, sto, 1);
+    StageProblem prob0(cor, tim, sto, 0),
+                 prob1(cor, tim, sto, 1);
 
     // nrow: 174 348
     // ncols: 602 1480
