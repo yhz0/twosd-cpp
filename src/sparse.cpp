@@ -123,6 +123,13 @@ size_t SparseMatrix<T>::get_num_cols() const
     return num_cols;
 }
 
+template <typename T>
+void SparseMatrix<T>::clear()
+{
+    row_indices.clear();
+    col_indices.clear();
+    values.clear();
+}
 
 // Explicit template instantiation
 template class SparseMatrix<double>;

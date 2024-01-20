@@ -68,6 +68,9 @@ public:
 
     size_t get_num_rows() const;
     size_t get_num_cols() const;
+
+    // Clear the matrix
+    void clear();
     
 private:
     size_t num_rows, num_cols;

@@ -80,6 +80,6 @@ private:
     // produce a hash from a vector, using the 1-norm
     static float hash(const std::vector<float> &vec);
 
-    // compare two vectors, using the 1-norm
+    // compare two vectors
     static bool approx_equal(const std::vector<float> &v1, const std::vector<float> &v2);
 };
