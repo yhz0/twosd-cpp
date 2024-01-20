@@ -1,7 +1,7 @@
 // Single machine version of TwoSD using OpenMP
 
-#ifndef TWOSD_SINGLE_H
-#define TWOSD_SINGLE_H
+#ifndef TWO_STAGE_H
+#define TWO_STAGE_H
 
 #include <cstddef>
 #include <omp.h>
@@ -10,9 +10,10 @@
 #include "smps.h"
 #include "prob.h"
 
-class TwoSDSingle {
+class TwoStageSP
+{
 public:
-    TwoSDSingle(const std::string base_path, const std::string prob_name, int nworkers_);
+    TwoStageSP(const std::string base_path, const std::string prob_name, int nworkers_);
 
 private:
     // number of workers
@@ -24,6 +25,16 @@ private:
 
     // second stage problem: one for each worker
     std::vector<std::unique_ptr<StageProblem>> prob1;
+
+    // solve the problem
+    virtual void solve() = 0;
 };
 
-#endif // TWOSD_SINGLE_H
+class TwoStageSCS : public TwoStageSP
+{
+public:
+    using TwoStageSP::TwoStageSP;
+
+};
+
+#endif // TWO_STAGE_H

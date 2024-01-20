@@ -1,9 +1,9 @@
-#include "twosd_single.h"
+#include "two_stage.h"
 #include <filesystem>
 
 namespace fs = std::filesystem;
 
-TwoSDSingle::TwoSDSingle(const std::string base_path, const std::string prob_name, int nworkers_):
+TwoStageSP::TwoStageSP(const std::string base_path, const std::string prob_name, int nworkers_):
 nworkers(nworkers_)
 {
     // construct path
