@@ -102,6 +102,8 @@ void StageProblem::attach_solver()
             throw std::runtime_error("StageProblem::attach_solver: error creating environment");
         }
     }
+    // environment settings
+    error = GRBsetintparam(env, GRB_INT_PAR_LOGTOCONSOLE, 0);
 
     // empty model if not null
     if (model != nullptr)
@@ -261,6 +263,36 @@ void StageProblem::update_solver_root_stage()
     }
 }
 
+StageProblem::Solution StageProblem::solve_problem(bool require_dual_solution)
+{
+    if (!is_solver_attached())
+    {
+        throw std::runtime_error("StageProblem::solve_problem: solver is not attached");
+    }
+
+    // call the solver
+    int error = GRBoptimize(model);
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::solve_problem: Gurobi error code " + std::to_string(error) + " when optimizing.");
+    }
+
+    // get the solution
+    std::vector<double> solution = get_primal_solution();
+
+    // get the objective value
+    double obj_value = get_obj_value();
+
+    if (!require_dual_solution)
+    {
+        return {obj_value, solution, {}};
+    } else {
+        // get the dual solution
+        std::vector<double> dual_solution = get_dual_solution();
+        return {obj_value, solution, dual_solution};
+    }
+}
+
 void StageProblem::set_x_base(const std::vector<double> &x_base_)
 {
     if (x_base_.size() != nvars_current)
@@ -295,6 +327,11 @@ double StageProblem::get_cost_shift() const
         return cost_shift;
     else
         return 0.0;
+}
+
+size_t StageProblem::get_dual_dimension() const
+{
+    return nrows + non_trivial_fx_index.size() + non_trivial_lb_index.size() + non_trivial_ub_index.size();
 }
 
 StageProblem::~StageProblem()
@@ -353,6 +390,78 @@ void StageProblem::update_solver_bounds()
             }
         }
     }
+}
+
+std::vector<double> StageProblem::get_primal_solution() const
+{
+    std::vector<double> solution(nvars_current, 0.0);
+    int error = GRBgetdblattrarray(model, GRB_DBL_ATTR_X, 0, nvars_current, solution.data());
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::solve_problem: Gurobi error code " + std::to_string(error) + " when getting solution.");
+    }
+
+    return solution;
+}
+
+std::vector<double> StageProblem::get_dual_solution() const
+{
+    std::vector<double> dual(get_dual_dimension(), 0.0);
+    
+    // get dual solution
+    int error = GRBgetdblattrarray(model, GRB_DBL_ATTR_PI, 0, nrows, dual.data());
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::solve_problem: Gurobi error code " + std::to_string(error) + " when getting dual solution.");
+    }
+
+    // get dual solution for non-trivial bounds, fx, lb, ub
+    for (size_t i = 0; i < non_trivial_fx_index.size(); ++i)
+    {
+        int index = non_trivial_fx_index[i];
+        error = GRBgetdblattrelement(model, "RC", index, &dual[nrows + i]);
+        if (error)
+        {
+            throw std::runtime_error("StageProblem::solve_problem: Gurobi error code " + std::to_string(error) + " when getting dual solution for non-trivial fixed bound.");
+        }
+    }
+
+    for (size_t i = 0; i < non_trivial_lb_index.size(); ++i)
+    {
+        int index = non_trivial_lb_index[i];
+        error = GRBgetdblattrelement(model, "RC", index, &dual[nrows + non_trivial_fx_index.size() + i]);
+        if (error)
+        {
+            throw std::runtime_error("StageProblem::solve_problem: Gurobi error code " + std::to_string(error) + " when getting dual solution for non-trivial lower bound.");
+        }
+    }
+
+    for (size_t i = 0; i < non_trivial_ub_index.size(); ++i)
+    {
+        int index = non_trivial_ub_index[i];
+        error = GRBgetdblattrelement(model, "RC", index, &dual[nrows + non_trivial_fx_index.size() + non_trivial_lb_index.size() + i]);
+        if (error)
+        {
+            throw std::runtime_error("StageProblem::solve_problem: Gurobi error code " + std::to_string(error) + " when getting dual solution for non-trivial upper bound.");
+        }
+    }
+
+    return dual;
+}
+
+double StageProblem::get_obj_value() const
+{
+    double obj_value;
+    int error = GRBgetdblattr(model, GRB_DBL_ATTR_OBJVAL, &obj_value);
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::solve_problem: Gurobi error code " + std::to_string(error) + " when getting objective value.");
+    }
+
+    if (shift_x_base)
+        return obj_value + cost_shift;
+    else
+        return obj_value;
 }
 
 void StageProblem::read_smps(const smps::SMPSCore &cor, const smps::SMPSTime &tim, const smps::SMPSStoch &sto, int stage)

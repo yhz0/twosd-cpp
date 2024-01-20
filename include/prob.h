@@ -82,6 +82,19 @@ public:
     // and bounds to the shifted bounds if necessary
     void update_solver_root_stage();
 
+    // struct for storing the solution
+    struct Solution {
+        // the optimal value
+        double obj_value;
+        // the optimal solution
+        std::vector<double> solution;
+        // the dual solution
+        std::vector<double> dual_solution;        
+    };
+
+    // solve the problem
+    Solution solve_problem(bool require_dual_solution = false);
+
     // set x_base to the specified value and update cost_shift and rhs_shift
     void set_x_base(const std::vector<double> &x_base_);
 
@@ -97,6 +110,9 @@ public:
 
     // remove all quadratic term, keeping the linear term
     void remove_quadratic_term();
+
+    // get the dimension of the dual vector
+    size_t get_dual_dimension() const;
 
     ~StageProblem();
 
@@ -143,6 +159,15 @@ public:
 
     // update the bounds to the solver with the shifted bounds
     void update_solver_bounds();
+
+    // get primal solution from the solver
+    std::vector<double> get_primal_solution() const;
+
+    // get dual solution from the solver
+    std::vector<double> get_dual_solution() const;
+
+    // get the objective value from the solver
+    double get_obj_value() const;
 
     // read from smps files
     void read_smps(const smps::SMPSCore &cor, const smps::SMPSTime &tim,

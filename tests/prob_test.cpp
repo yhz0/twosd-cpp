@@ -236,7 +236,7 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]")
                             prev_stage_input = {1.0, 2.0, 3.0, 4.0};
 
         // change the scenario
-        prob.apply_scenario_rhs(prev_stage_input, scenario_omega);
+        prob.update_solver_with_scenario(prev_stage_input, scenario_omega);
 
         // expected: [1 2 3 4 123.4 3 2]
         std::vector<double> expected_rhs = {1.0, 2.0, 3.0, 4.0, 123.4, 3.0, 2.0};
@@ -256,7 +256,7 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]")
 
         // set x_base to [10 20 30 40] and apply rhs
         prob.set_x_base({10.0, 20.0, 30.0, 40.0});
-        prob.apply_root_stage_rhs();
+        prob.update_solver_root_stage();
 
         // expected cost shift = dot ([10 7 16 6], [10 20 30 40]) = 960
         CHECK(prob.get_cost_shift() == 960.0);
@@ -272,7 +272,7 @@ TEST_CASE("Test Setup for Problem", "[StageProblem]")
 
         // unset x_base and apply rhs
         prob.unset_x_base();
-        prob.apply_root_stage_rhs();
+        prob.update_solver_root_stage();
 
         // expect cost shift = 0
         CHECK(prob.get_cost_shift() == 0.0);
