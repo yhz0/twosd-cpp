@@ -104,6 +104,10 @@ void StageProblem::attach_solver()
     }
     // environment settings
     error = GRBsetintparam(env, GRB_INT_PAR_LOGTOCONSOLE, 0);
+    if (error)
+    {
+        throw std::runtime_error("StageProblem::attach_solver: error setting log to console");
+    }
 
     // empty model if not null
     if (model != nullptr)

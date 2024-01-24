@@ -6,7 +6,7 @@
 #include <string>
 #include <map>
 #include <optional>
-#include <tuple>
+#include <iostream>
 
 /**
  * BijectiveMap is a class that provides a bidirectional mapping between
@@ -48,5 +48,27 @@ private:
 
 // Approximate equality of floating point numbers.
 inline bool approx_equal(double a, double b, double epsilon = 1e-6) { return std::abs(a - b) < epsilon; }
+
+inline void check_solver_error(int error, const std::string& msg) {
+    if (error) {
+        std::cerr << msg << std::endl;
+        std::abort();
+    }
+}
+
+// string representation of a vector
+template <typename T>
+std::string vec_to_string(const std::vector<T>& vec) {
+    std::string str = "[";
+    for (const auto& x : vec) {
+        str += std::to_string(x) + ", ";
+    }
+    // Remove the last comma and space if the vector is not empty
+    if (!vec.empty()) {
+        str.erase(str.length() - 2);
+    }
+    str += "]";
+    return str;
+}
 
 #endif // UTILS_H
