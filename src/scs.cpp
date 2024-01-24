@@ -1,6 +1,9 @@
 #include "scs.h"
 #include <cstddef>
-
+#define DEBUG_SCS
+#ifdef DEBUG_SCS
+    #include <iostream>
+#endif
 void SCS::update(const std::vector<double> &grad)
 {
     // least norm
@@ -63,4 +66,41 @@ double SCS::optimal_lambda(double dg, double gg, double dd)
         lambda = 1.0;
     }
     return lambda;
+}
+
+bool SCS::satisfy_L_condition(double f_forward, double f_current, double t) const
+{
+    bool satisfied = f_forward <= f_current - m1 * t * d_norm_squared;
+
+#ifdef DEBUG_SCS
+    std::cout << "SCS L condition:"
+    << "t = " << t
+    << ", f_forward = " << f_forward
+    << ", f_current = " << f_current
+    << ", d_norm_squared = " << d_norm_squared
+    << ", satisfied = " << satisfied << '\n';
+#endif
+
+    return satisfied;
+}
+
+bool SCS::satisfy_R_condition(const std::vector<double> &grad_forward) const
+{
+    // dot product of grad_forward and current_direction
+    double dg = 0.0;
+    for (size_t i = 0; i < current_direction.size(); i++)
+    {
+        dg += grad_forward[i] * current_direction[i];
+    }
+
+    bool satisfied = dg >= - m2 * d_norm_squared;
+
+#ifdef DEBUG_SCS
+    std::cout << "SCS R condition:"
+    << "dg = " << dg
+    << ", d_norm_squared = " << d_norm_squared
+    << ", satisfied = " << satisfied << '\n';
+#endif
+
+    return satisfied;
 }

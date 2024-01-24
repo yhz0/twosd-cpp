@@ -28,7 +28,6 @@ sto((fs::path(base_path) / prob_name / (prob_name + ".sto")).string())
 
 }
 
-const int INITIAL_SAMPLES = 2000;
 TwoStageSCS::TwoStageSCS(const std::string base_path, const std::string prob_name, int nworkers_)
     : TwoStageSP(base_path, prob_name, nworkers_)
 {
@@ -53,6 +52,7 @@ void TwoStageSCS::solve()
     std::mt19937 rng(0);
 
     // generate initial samples
+    const int INITIAL_SAMPLES = 1000;
     for(int i = 0; i < INITIAL_SAMPLES; ++i) {
         samples.push_back(sto.generate_scenario(rng));
     }
@@ -60,7 +60,7 @@ void TwoStageSCS::solve()
     std::vector<double> x(prob0 -> nvars_current, 0.0);
     SCS scs;
 
-    const int MAX_ITER = 10;
+    const int MAX_ITER = 1000;
     for (int iter = 0; iter <MAX_ITER; ++iter) 
     {
         // obtain some feasible first stage solution
@@ -73,8 +73,8 @@ void TwoStageSCS::solve()
         }
 
         // print feasible solution
-        std::cout << "Feasible solution: " << vec_to_string(x) << '\n';
-
+        // std::cout << "Feasible solution: " << vec_to_string(x) << '\n';
+ 
         double obj_value = 0.0;
         std::vector<double> grad(prob0->nvars_current, 0.0);
 
@@ -91,6 +91,10 @@ void TwoStageSCS::solve()
         // divide gradient by the number of samples
         for (size_t j = 0; j < prob0->nvars_current; ++j)
             grad[j] /= samples.size();
+
+        // add first stage cost to gradient
+        for (size_t j = 0; j < x.size(); ++j)
+            grad[j] += prob0->cost_coefficients[j];
 
         // accumulate objective solution.obj_value
         for (size_t i = 0; i < samples.size(); ++i)
@@ -119,7 +123,7 @@ void TwoStageSCS::solve()
         std::vector<double> direction = scs.get_current_direction();
 
         // print direction
-        std::cout << "SCS Direction: " << vec_to_string(direction) << '\t' << "Norm2: " << scs.get_norm_squared() << '\n';
+        // std::cout << "SCS Direction: " << vec_to_string(direction) << '\t' << "Norm2: " << scs.get_norm_squared() << '\n';
         
         // // constant step size
         // const double step_size = 0.2;
@@ -127,6 +131,76 @@ void TwoStageSCS::solve()
         // line search
         double step_size = 0.0;
 
+        const double max_step_size = 10.0;
+
+        double l = 0.0, r = max_step_size, m = (l + r) / 2.0;
+        while (true)
+        {
+            double f_current = obj_value;
+            // x - m * direction;
+            std::vector<double> x_forward(x);
+            for (size_t j = 0; j < x.size(); ++j)
+                x_forward[j] -= m * direction[j];
+            
+            // make sure x_forward is feasible
+            // if not we have to scale back the step size
+            if (!proj_prob0->is_feasible(x_forward))
+            {
+                // shrink the interval
+                r = m;
+                m = (l + r) / 2.0;
+                continue;
+            }
+
+            // solve all subproblems
+            auto sol_pair = solve_subproblems(x_forward, samples);
+            auto &solutions = sol_pair.first;
+            auto &cuts = sol_pair.second;
+
+            // get f_forward by averaging objective values
+            double f_forward = 0.0;
+            for (size_t i = 0; i < samples.size(); ++i)
+                f_forward += solutions[i].obj_value;
+            f_forward /= samples.size();
+
+            // add the first stage objective
+            for (size_t j = 0; j < x.size(); ++j)
+                f_forward += prob0->cost_coefficients[j] * x_forward[j];
+
+            if (!scs.satisfy_L_condition(f_forward, f_current, m))
+            {
+                // shrink the interval
+                r = m;
+                m = (l + r) / 2.0;
+                continue;
+            }
+
+            // accumulate gradient  = -beta
+            std::vector<double> grad_forward(prob0->nvars_current, 0.0);
+            for (size_t i = 0; i < samples.size(); ++i)
+                for (size_t j = 0; j < prob0->nvars_current; ++j)
+                    grad_forward[j] -= cuts[i].beta[j];
+            
+            // divide gradient by the number of samples
+            for (size_t j = 0; j < prob0->nvars_current; ++j)
+                grad_forward[j] /= samples.size();
+
+            // add first stage cost to gradient
+            for (size_t j = 0; j < x.size(); ++j)
+                grad_forward[j] += prob0->cost_coefficients[j];
+
+            if (!scs.satisfy_R_condition(grad_forward))
+            {
+                // shrink the interval
+                l = m;
+                m = (l + r) / 2.0;
+                continue;
+            }
+
+            // satisfy both conditions
+            step_size = m;
+            break;
+        }
 
 
         std::cout << "Line search Step size: " << step_size << '\n';

@@ -17,12 +17,12 @@ class StageProjectionProblem: public StageProblem {
     // such that the projected vector is x0 + d
     std::optional<std::vector<double>> project(const std::vector<double> &x0);
 
+    // check if the given vector is feasible
+    bool is_feasible(const std::vector<double> &x0);
+
     private:
     // remove linear terms from the objective
     void remove_linear_terms();
-
-    // check if the given vector is feasible
-    bool is_feasible(const std::vector<double> &x0);
 };
 
 #endif
