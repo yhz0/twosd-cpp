@@ -6,6 +6,8 @@
 #include "utils.h"  // for approx_equal
 #include "gurobi_c.h"
 
+class CutHelper;   // forward declaration
+
 class StageProblem
 {
 public:
@@ -89,6 +91,7 @@ public:
         // the optimal solution
         std::vector<double> solution;
         // the dual solution
+        // arranged as [pi, pi_fx, pi_lb, pi_ub]
         std::vector<double> dual_solution;        
     };
 
@@ -116,11 +119,12 @@ public:
 
     ~StageProblem();
 
-#ifdef UNIT_TEST
-    // for unit test, expose the gurobi environment and model
+    // expose the gurobi environment and model
     GRBenv* get_env() const { return env; }
     GRBmodel* get_model() const { return model; }
-#endif  // UNIT_TEST
+
+    // for generating cuts
+    friend class CutHelper;
 
     private:
     // if shift_x_base is true,
