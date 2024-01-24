@@ -12,7 +12,7 @@ class SCS {
     // get the norm of the current direction
     double get_norm_squared() const;
 
-    // get a constant reference to the current direction
+    // get the current direction
     const std::vector<double>& get_current_direction() const;
 
     private:

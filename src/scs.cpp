@@ -47,7 +47,13 @@ const std::vector<double> &SCS::get_current_direction() const
 
 double SCS::optimal_lambda(double dg, double gg, double dd)
 {
-    double lambda = (-dg + gg) / (dd - 2.0 * dg + gg);
+    double a = -dg + gg, b = dd - 2.0 * dg + gg;
+    double lambda = a / b;
+
+    // TODO: is this correct? if d =g then dd == gg == dg
+    if (b == 0.0)
+        return 1.0;
+
     if (lambda < 0.0)
     {
         lambda = 0.0;
