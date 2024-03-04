@@ -1,6 +1,6 @@
 #include "scs.h"
 #include <cstddef>
-#define DEBUG_SCS
+// #define DEBUG_SCS
 #ifdef DEBUG_SCS
     #include <iostream>
 #endif
@@ -38,11 +38,6 @@ void SCS::update(const std::vector<double> &grad)
     d_norm_squared = new_norm_squared;
 }
 
-double SCS::get_norm_squared() const
-{
-    return d_norm_squared;
-}
-
 const std::vector<double> &SCS::get_current_direction() const
 {
     return current_direction;
@@ -68,7 +63,7 @@ double SCS::optimal_lambda(double dg, double gg, double dd)
     return lambda;
 }
 
-bool SCS::satisfy_L_condition(double f_forward, double f_current, double t) const
+bool UnconstrainedSCS::satisfy_L_condition(double f_forward, double f_current, double t) const
 {
     bool satisfied = f_forward <= f_current - m1 * t * d_norm_squared;
 
@@ -84,13 +79,13 @@ bool SCS::satisfy_L_condition(double f_forward, double f_current, double t) cons
     return satisfied;
 }
 
-bool SCS::satisfy_R_condition(const std::vector<double> &grad_forward) const
+bool UnconstrainedSCS::satisfy_R_condition(const std::vector<double> &g_forward) const
 {
     // dot product of grad_forward and current_direction
     double dg = 0.0;
     for (size_t i = 0; i < current_direction.size(); i++)
     {
-        dg += grad_forward[i] * current_direction[i];
+        dg += g_forward[i] * current_direction[i];
     }
 
     bool satisfied = dg >= - m2 * d_norm_squared;
@@ -103,4 +98,16 @@ bool SCS::satisfy_R_condition(const std::vector<double> &grad_forward) const
 #endif
 
     return satisfied;
+}
+
+bool ConstraintedSCS::satisfy_L_condition_constrained(double f_forward, double f_current, const std::vector<double> &x_forward, const std::vector<double> &x, double t) const
+{
+    // FIXME: implement this
+    return false;
+}
+
+bool ConstraintedSCS::satisfy_R_condition_constrained(const std::vector<double> &g_forward, const std::vector<double> &x_forward, const std::vector<double> &x) const
+{
+    // FIXME: implement this
+    return false;
 }
